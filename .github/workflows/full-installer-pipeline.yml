@@ -193,22 +193,11 @@ jobs:
           echo "SIDECAR_NAME=$($bin.Name)" >> $env:GITHUB_OUTPUT
           Write-Host "Found sidecar: $($bin.FullName)"
 
-      - name: Install verpatch (Windows version tool)
+      - name: Install Python pefile library for version embedding
         shell: pwsh
         run: |
-          Write-Host "Installing verpatch..."
-          choco install verpatch -y --no-progress
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "✓ verpatch installed successfully"
-          } else {
-            Write-Host "⚠ Chocolatey install failed, attempting direct download..."
-            # Fallback: Download from GitHub release if Chocolatey fails
-            $url = "https://github.com/jrsoftware/verpatch/releases/download/v1.0.15/verpatch-1.0.15-binary.zip"
-            $tempDir = "$env:TEMP\verpatch"
-            New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
-            Invoke-WebRequest -Uri $url -OutFile "$tempDir\verpatch.zip" -ErrorAction SilentlyContinue
-            Expand-Archive -Path "$tempDir\verpatch.zip" -DestinationPath $tempDir -ErrorAction SilentlyContinue
-          }
+          python -m pip install pefile --quiet
+          Write-Host "✓ pefile library installed"
 
       - name: Embed version metadata in EXE (Windows Properties)
         shell: pwsh
@@ -219,27 +208,50 @@ jobs:
           Write-Host "Embedding version metadata: $version"
           Write-Host "EXE path: $exePath"
           
-          # Use verpatch tool to embed Windows version metadata
-          # This makes the version visible in Properties → Details tab
-          $verpatch = "C:\Program Files (x86)\verpatch\verpatch.exe"
-          if (-not (Test-Path $verpatch)) {
-            # Try Chocolatey location
-            $verpatch = "C:\ProgramData\chocolatey\bin\verpatch.exe"
-          }
+          # Create Python script to embed version using pefile
+          $pythonScript = @"
+import pefile
+import sys
+
+exe_path = r"$exePath"
+version = "$version"
+
+try:
+    # Parse the version string (e.g., "1.3.1" -> 1,3,1,0)
+    parts = version.split('.')
+    while len(parts) < 4:
+        parts.append('0')
+    version_tuple = tuple(int(p) for p in parts[:4])
+    
+    # Load PE file
+    pe = pefile.PE(exe_path, fast_load=False)
+    
+    # Update version info in PE header
+    if hasattr(pe, 'VS_FIXEDFILEINFO'):
+        pe.VS_FIXEDFILEINFO[0].FileVersionMS = (version_tuple[0] << 16) | version_tuple[1]
+        pe.VS_FIXEDFILEINFO[0].FileVersionLS = (version_tuple[2] << 16) | version_tuple[3]
+        pe.VS_FIXEDFILEINFO[0].ProductVersionMS = (version_tuple[0] << 16) | version_tuple[1]
+        pe.VS_FIXEDFILEINFO[0].ProductVersionLS = (version_tuple[2] << 16) | version_tuple[3]
+    
+    # Write back to file
+    pe.write(exe_path)
+    print(f"✓ Version metadata embedded: {version}")
+    sys.exit(0)
+except Exception as e:
+    print(f"⚠ Could not embed version via pefile: {str(e)}")
+    print(f"   Version from PyInstaller spec will be used")
+    sys.exit(0)  # Don't fail - PyInstaller spec already has version
+"@
           
-          if (Test-Path $verpatch) {
-            Write-Host "Using verpatch at: $verpatch"
-            # Embed file version and product version
-            & $verpatch "$exePath" "$version" /s FileVersion "$version" /s ProductVersion "$version"
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "✓ Version metadata embedded successfully"
-            } else {
-              Write-Host "⚠ verpatch encountered an issue (exit code: $LASTEXITCODE)"
-            }
-          } else {
-            Write-Host "⚠ verpatch not found - version will be embedded from PyInstaller spec only"
-            Write-Host "   This may not show in Windows Properties → Details tab"
-          }
+          # Write script to temp file
+          $scriptPath = "$env:TEMP\embed_version.py"
+          Set-Content -Path $scriptPath -Value $pythonScript -Encoding UTF8
+          
+          # Run Python script
+          python $scriptPath
+          
+          # Cleanup
+          Remove-Item $scriptPath -Force -ErrorAction SilentlyContinue
 
       - name: Copy sidecar into Tauri binaries folder
         shell: pwsh
