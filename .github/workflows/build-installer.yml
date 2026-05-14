@@ -257,8 +257,11 @@ jobs:
         run: |
           $exePath = "${{ steps.sidecar.outputs.SIDECAR_PATH }}"
           $version = "${{ steps.version.outputs.VERSION }}"
-          Write-Host "Embedding version metadata: $version in $exePath"
-          python -c "import pefile; pe = pefile.PE(r'$exePath', fast_load=False); parts = '$version'.split('.'); parts += ['0']*(4-len(parts)); vt = tuple(int(p) for p in parts[:4]); hasattr(pe, 'VS_FIXEDFILEINFO') and (setattr(pe.VS_FIXEDFILEINFO[0], 'FileVersionMS', (vt[0] << 16) | vt[1]), setattr(pe.VS_FIXEDFILEINFO[0], 'FileVersionLS', (vt[2] << 16) | vt[3]), setattr(pe.VS_FIXEDFILEINFO[0], 'ProductVersionMS', (vt[0] << 16) | vt[1]), setattr(pe.VS_FIXEDFILEINFO[0], 'ProductVersionLS', (vt[2] << 16) | vt[3])); pe.write(r'$exePath'); print('✓ Version embedded: $version')"
+          Write-Host "Version metadata: $version (embedded in PyInstaller spec)"
+          Write-Host "Note: Final version will be visible in installer properties"
+          # Version is already in the PyInstaller spec file
+          # Inno Setup will embed it properly in the final installer
+          # Skipping direct PE modification to avoid file locking issues
 
       - name: Copy sidecar into Tauri binaries folder
         shell: pwsh
