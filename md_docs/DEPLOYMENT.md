@@ -81,7 +81,7 @@ Edit `app/page.tsx`:
 // Find the releases array
 const releases: ReleaseNote[] = [
   {
-    version: '1.3.1',
+    version: '1.3.2',
     date: 'January 20, 2025',
     title: 'Your Feature Title',
     description: 'Description of what changed',
