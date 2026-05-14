@@ -1,0 +1,536 @@
+name: Build and Upload Windows Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (leave empty to use latest)"
+        required: false
+        default: ""
+      frontend_repo:
+        description: "Frontend repo (owner/name). Leave blank to use default or repo variable."
+        required: false
+        default: ""
+      frontend_ref:
+        description: "Frontend branch or tag. Leave blank to use default or repo variable."
+        required: false
+        default: ""
+      backend_repo:
+        description: "Backend repo (owner/name). Leave blank to use default or repo variable."
+        required: false
+        default: ""
+      backend_ref:
+        description: "Backend branch or tag. Leave blank to use default or repo variable."
+        required: false
+        default: ""
+
+concurrency:
+  group: build-installer-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+  RUST_TOOLCHAIN: "stable"
+  FRONTEND_REPO: ${{ github.event.inputs.frontend_repo || vars.FRONTEND_REPO || 'QuantTraderTools/QuantCopierTelegramUI' }}
+  FRONTEND_REF: ${{ github.event.inputs.frontend_ref || vars.FRONTEND_REF || 'main' }}
+  FRONTEND_PATH: "frontend"
+  BACKEND_REPO: ${{ github.event.inputs.backend_repo || vars.BACKEND_REPO || 'QuantTraderTools/qcdemo' }}
+  BACKEND_REF: ${{ github.event.inputs.backend_ref || vars.BACKEND_REF || 'main' }}
+  BACKEND_PATH: "backend"
+
+jobs:
+  build-and-upload:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    
+    steps:
+      # ============================================================
+      # 1. Checkout repository
+      # ============================================================
+      - name: Checkout workflow repo (release orchestrator)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate required secrets (frontend/backend)
+        shell: pwsh
+        run: |
+          if (-not "${{ secrets.FRONTEND_REPO_TOKEN }}") { Write-Error "FRONTEND_REPO_TOKEN is missing"; exit 1 }
+          if (-not "${{ secrets.BACKEND_REPO_TOKEN }}")  { Write-Error "BACKEND_REPO_TOKEN is missing";  exit 1 }
+          Write-Host "Secrets present: FRONTEND_REPO_TOKEN ✓, BACKEND_REPO_TOKEN ✓"
+
+      - name: Probe frontend repo access (no secret leakage)
+        shell: pwsh
+        env:
+          FRONTEND_REPO: ${{ env.FRONTEND_REPO }}
+          FRONTEND_TOKEN: ${{ secrets.FRONTEND_REPO_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $url = "https://api.github.com/repos/$env:FRONTEND_REPO"
+          $headers = @{ "Authorization" = "token $env:FRONTEND_TOKEN"; "User-Agent" = "gha-check" }
+          $resp = Invoke-WebRequest -Uri $url -Headers $headers -Method GET -UseBasicParsing -ErrorAction Stop
+          if ($resp.StatusCode -ne 200) { Write-Error "Frontend repo access failed: HTTP $($resp.StatusCode)"; exit 1 }
+          Write-Host "Frontend repo access ok (HTTP 200)."
+
+      - name: Probe backend repo access (no secret leakage)
+        shell: pwsh
+        env:
+          BACKEND_REPO: ${{ env.BACKEND_REPO }}
+          BACKEND_TOKEN: ${{ secrets.BACKEND_REPO_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $url = "https://api.github.com/repos/$env:BACKEND_REPO"
+          $headers = @{ "Authorization" = "token $env:BACKEND_TOKEN"; "User-Agent" = "gha-check" }
+          $resp = Invoke-WebRequest -Uri $url -Headers $headers -Method GET -UseBasicParsing -ErrorAction Stop
+          if ($resp.StatusCode -ne 200) { Write-Error "Backend repo access failed: HTTP $($resp.StatusCode)"; exit 1 }
+          Write-Host "Backend repo access ok (HTTP 200)."
+
+      - name: Checkout frontend app
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FRONTEND_REPO }}
+          ref: ${{ env.FRONTEND_REF }}
+          path: ${{ env.FRONTEND_PATH }}
+          fetch-depth: 1
+          token: ${{ secrets.FRONTEND_REPO_TOKEN }}
+
+      - name: Checkout backend sidecar repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          ref: ${{ env.BACKEND_REF }}
+          path: ${{ env.BACKEND_PATH }}
+          fetch-depth: 1
+          token: ${{ secrets.BACKEND_REPO_TOKEN }}
+
+      # ============================================================
+      # 1.5. Extract version and apply to PyInstaller & Inno Setup
+      # ============================================================
+      - name: Extract and apply version
+        id: version
+        shell: pwsh
+        run: |
+          # Priority 1: Read from markdown file (source of truth)
+          $markdownFile = "md_docs/DEPLOYMENT.md"
+          $version = $null
+          
+          if (Test-Path $markdownFile) {
+            $content = Get-Content $markdownFile -Raw
+            if ($content -match 'version:\s*\D*(\d+\.\d+\.\d+)') {
+              $version = $matches[1]
+              Write-Host "✓ Found version in markdown: $version"
+            }
+          }
+          
+          # Priority 2: Extract from GitHub release tag
+          if (-not $version) {
+            if ("${{ github.event_name }}" -eq "release") {
+              $tag = "${{ github.event.release.tag_name }}"
+              if ($tag -match "^v?(\d+\.\d+\.\d+.*)$") {
+                $version = $matches[1]
+                Write-Host "✓ Found version in release tag: $version"
+              }
+            }
+          }
+          
+          # Priority 3: Fallback
+          if (-not $version) {
+            $version = "1.0.0"
+            Write-Host "⚠ Using default version: $version"
+          }
+          
+          Write-Host "📦 Final version: $version"
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          
+          # Update PyInstaller spec file
+          $specFile = "${{ env.BACKEND_PATH }}/QuantCopierAPI.spec"
+          if (Test-Path $specFile) {
+            $content = Get-Content $specFile -Raw
+            if ($content -match 'version\s*=') {
+              $content = $content -replace 'version\s*=\s*[0-9.]+', "version='$version'"
+            } else {
+              $content = $content -replace "(name='QuantCopierAPI',)", "name='QuantCopierAPI',`n    version='$version',"
+            }
+            Set-Content $specFile -Value $content -Encoding UTF8 -NoNewline
+            Write-Host "✓ Updated PyInstaller spec: version=$version"
+          }
+          
+          # Update Inno Setup script
+          $issFile = "${{ env.FRONTEND_PATH }}/QCTelegramMT5_SetupExe_Spec.iss"
+          if (Test-Path $issFile) {
+            $content = Get-Content $issFile -Raw
+            $content = $content -replace '#define MyAppVersion ".+?"', ('#define MyAppVersion "' + $version + '"')
+            if ($content -match '#define MyFileVersion') {
+              $content = $content -replace '#define MyFileVersion ".+?"', ('#define MyFileVersion "' + $version + '"')
+            } else {
+              $content = $content -replace "(#define MyAppVersion ""$version"")", "`$1`n#define MyFileVersion ""$version"""
+            }
+            Set-Content $issFile -Value $content -Encoding UTF8 -NoNewline
+            Write-Host "✓ Updated Inno Setup: version=$version"
+          }
+
+      # ============================================================
+      # 2. Setup Node.js with npm cache
+      # ============================================================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: ${{ env.FRONTEND_PATH }}/package-lock.json
+
+      # ============================================================
+      # 3. Setup Rust toolchain
+      # ============================================================
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      # ============================================================
+      # 4. Cache Cargo dependencies
+      # ============================================================
+      - name: Cache Cargo registry and build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "${{ env.FRONTEND_PATH }}/src-tauri"
+          cache-on-failure: false
+
+      # ============================================================
+      # 5. Setup Python for sidecar build
+      # ============================================================
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # ============================================================
+      # 6. Build backend sidecar (PyInstaller)
+      # ============================================================
+      - name: Create venv and install backend deps
+        shell: pwsh
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\Activate.ps1
+          python -m pip install --upgrade pip
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          if (Test-Path requirements-dev.txt) { pip install -r requirements-dev.txt }
+
+      - name: Build sidecar executable (PyInstaller)
+        shell: pwsh
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: |
+          .\.venv\Scripts\Activate.ps1
+          if (Test-Path QuantCopierTelegram.spec) {
+            pyinstaller QuantCopierTelegram.spec
+          } elseif (Test-Path QuantCopierAPI.spec) {
+            pyinstaller QuantCopierAPI.spec
+          } else {
+            pyinstaller --onefile QuantCopierTelegram.py
+          }
+
+      - name: Locate sidecar binary
+        id: sidecar
+        shell: pwsh
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: |
+          $bin = Get-ChildItem -Path dist -Filter *.exe -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $bin) { Write-Error "Sidecar binary not found"; exit 1 }
+          echo "SIDECAR_PATH=$($bin.FullName)" >> $env:GITHUB_OUTPUT
+          echo "SIDECAR_NAME=$($bin.Name)" >> $env:GITHUB_OUTPUT
+          Write-Host "Found sidecar: $($bin.FullName)"
+
+      - name: Install verpatch (Windows version tool)
+        shell: pwsh
+        run: |
+          Write-Host "Installing verpatch..."
+          choco install verpatch -y --no-progress
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ verpatch installed successfully"
+          } else {
+            Write-Host "⚠ Chocolatey install failed, attempting direct download..."
+            # Fallback: Download from GitHub release if Chocolatey fails
+            $url = "https://github.com/jrsoftware/verpatch/releases/download/v1.0.15/verpatch-1.0.15-binary.zip"
+            $tempDir = "$env:TEMP\verpatch"
+            New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+            Invoke-WebRequest -Uri $url -OutFile "$tempDir\verpatch.zip" -ErrorAction SilentlyContinue
+            Expand-Archive -Path "$tempDir\verpatch.zip" -DestinationPath $tempDir -ErrorAction SilentlyContinue
+          }
+
+      - name: Embed version metadata in EXE (Windows Properties)
+        shell: pwsh
+        run: |
+          $exePath = "${{ steps.sidecar.outputs.SIDECAR_PATH }}"
+          $version = "${{ steps.version.outputs.VERSION }}"
+          
+          Write-Host "Embedding version metadata: $version"
+          Write-Host "EXE path: $exePath"
+          
+          # Use verpatch tool to embed Windows version metadata
+          # This makes the version visible in Properties → Details tab
+          $verpatch = "C:\Program Files (x86)\verpatch\verpatch.exe"
+          if (-not (Test-Path $verpatch)) {
+            # Try Chocolatey location
+            $verpatch = "C:\ProgramData\chocolatey\bin\verpatch.exe"
+          }
+          
+          if (Test-Path $verpatch) {
+            Write-Host "Using verpatch at: $verpatch"
+            # Embed file version and product version
+            & $verpatch "$exePath" "$version" /s FileVersion "$version" /s ProductVersion "$version"
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✓ Version metadata embedded successfully"
+            } else {
+              Write-Host "⚠ verpatch encountered an issue (exit code: $LASTEXITCODE)"
+            }
+          } else {
+            Write-Host "⚠ verpatch not found - version will be embedded from PyInstaller spec only"
+            Write-Host "   This may not show in Windows Properties → Details tab"
+          }
+
+      - name: Copy sidecar into Tauri binaries folder
+        shell: pwsh
+        run: |
+          $targetDir = Join-Path "${{ env.FRONTEND_PATH }}" "src-tauri\binaries"
+          if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir | Out-Null }
+          $targetName = "QuantCopierAPI-x86_64-pc-windows-msvc.exe"
+          Copy-Item "${{ steps.sidecar.outputs.SIDECAR_PATH }}" (Join-Path $targetDir $targetName) -Force
+          Write-Host "Copied sidecar to $targetDir\$targetName"
+
+      # ============================================================
+      # 7. Install Node.js dependencies
+      # ============================================================
+      - name: Install Node.js dependencies
+        working-directory: ${{ env.FRONTEND_PATH }}
+        run: npm ci
+        shell: pwsh
+
+      # ============================================================
+      # 8. Build Tauri Windows installer
+      # ============================================================
+      - name: Build Tauri installer
+        working-directory: ${{ env.FRONTEND_PATH }}
+        run: npm run tauri build
+        shell: pwsh
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+      # ============================================================
+      # 9. Locate the generated installer
+      # ============================================================
+      - name: Find installer executable
+        id: find_installer
+        shell: pwsh
+        run: |
+          Write-Host "Searching for installer in ${{ env.FRONTEND_PATH }}/src-tauri/target..."
+          
+          $searchPaths = @(
+            "${{ env.FRONTEND_PATH }}\src-tauri\target\release\bundle\nsis\*.exe",
+            "${{ env.FRONTEND_PATH }}\src-tauri\target\release\bundle\msi\*.msi",
+            "${{ env.FRONTEND_PATH }}\src-tauri\target\release\*.exe"
+          )
+          
+          $installer = $null
+          foreach ($pattern in $searchPaths) {
+            $found = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue | 
+                     Sort-Object LastWriteTime -Descending | 
+                     Select-Object -First 1
+            if ($found) {
+              $installer = $found
+              break
+            }
+          }
+          
+          if (-not $installer) {
+            Write-Error "ERROR: No installer found in any expected location"
+            exit 1
+          }
+          
+          $fullPath = $installer.FullName
+          $fileName = $installer.Name
+          
+          Write-Host "✓ Found installer: $fullPath"
+          Write-Host "✓ Filename: $fileName"
+          Write-Host "✓ Size: $([math]::Round($installer.Length / 1MB, 2)) MB"
+          
+          # Set outputs for later steps
+          echo "INSTALLER_PATH=$fullPath" >> $env:GITHUB_OUTPUT
+          echo "INSTALLER_NAME=$fileName" >> $env:GITHUB_OUTPUT
+          
+          # Also set as environment variable
+          echo "INSTALLER_PATH=$fullPath" >> $env:GITHUB_ENV
+          echo "INSTALLER_NAME=$fileName" >> $env:GITHUB_ENV
+
+      # ============================================================
+      # 8. Determine release tag
+      # ============================================================
+      - name: Get release tag
+        id: get_tag
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "release") {
+            $tag = "${{ github.event.release.tag_name }}"
+          } elseif ("${{ github.event.inputs.release_tag }}" -ne "") {
+            $tag = "${{ github.event.inputs.release_tag }}"
+          } else {
+            $tag = "manual-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+          }
+          
+          Write-Host "Release tag: $tag"
+          echo "RELEASE_TAG=$tag" >> $env:GITHUB_OUTPUT
+          echo "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+
+      # ============================================================
+      # 9. Prepare Firebase service account credentials
+      # ============================================================
+      - name: Setup Firebase credentials
+        shell: pwsh
+        run: |
+          if (-not "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}") {
+            Write-Error "ERROR: FIREBASE_SERVICE_ACCOUNT_KEY secret is not set"
+            exit 1
+          }
+
+          $keyPath = "$env:RUNNER_TEMP\serviceAccount.json"
+          # Write raw JSON to file without echoing contents
+          Set-Content -Path $keyPath -Value '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' -Encoding UTF8 -NoNewline
+
+          if (-not (Test-Path $keyPath)) {
+            Write-Error "ERROR: Failed to create Firebase credentials file"
+            exit 1
+          }
+
+          # Export for Python uploader
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$keyPath" >> $env:GITHUB_ENV
+
+      # ============================================================
+      # 10. Install Python dependencies for upload script
+      # ============================================================
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          Write-Host "Installing google-cloud-storage..."
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install google-cloud-storage
+
+      # ============================================================
+      # 11. Upload installer to Firebase Storage
+      # ============================================================
+      - name: Upload to Firebase Storage
+        shell: pwsh
+        run: |
+          Write-Host "Uploading installer to Firebase Storage..."
+          
+          $bucket = "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
+          $projectId = "${{ secrets.FIREBASE_PROJECT_ID }}"
+          
+          if (-not $bucket) {
+            Write-Error "ERROR: FIREBASE_STORAGE_BUCKET secret is not set"
+            exit 1
+          }
+          
+          $destPath = "installers/${{ steps.get_tag.outputs.RELEASE_TAG }}/$env:INSTALLER_NAME"
+          
+          Write-Host "Source: $env:INSTALLER_PATH"
+          Write-Host "Destination: gs://$bucket/$destPath"
+          
+          python scripts/upload_firebase.py `
+            --bucket "$bucket" `
+            --file "$env:INSTALLER_PATH" `
+            --dest "$destPath" `
+            --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "ERROR: Upload to Firebase Storage failed"
+            exit 1
+          }
+          
+          Write-Host "✓ Upload successful!"
+          
+          # Generate download URL
+          $downloadUrl = "https://firebasestorage.googleapis.com/v0/b/$bucket/o/installers%2F${{ steps.get_tag.outputs.RELEASE_TAG }}%2F$env:INSTALLER_NAME?alt=media"
+          
+          echo "DOWNLOAD_URL=$downloadUrl" >> $env:GITHUB_ENV
+          echo "FIREBASE_PATH=gs://$bucket/$destPath" >> $env:GITHUB_ENV
+
+      # Always clean up the credentials file, even if earlier steps fail
+      - name: Cleanup Firebase credentials
+        if: always()
+        shell: pwsh
+        run: |
+          $keyPath = "$env:RUNNER_TEMP\serviceAccount.json"
+          if (Test-Path $keyPath) { Remove-Item $keyPath -Force }
+
+      # ============================================================
+      # 12. Upload installer as GitHub Actions artifact
+      # ============================================================
+      - name: Upload installer as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-${{ steps.get_tag.outputs.RELEASE_TAG }}
+          path: ${{ steps.find_installer.outputs.INSTALLER_PATH }}
+          retention-days: 90
+          if-no-files-found: error
+
+      # ============================================================
+      # 13. Build summary
+      # ============================================================
+      - name: Build summary
+        shell: pwsh
+        run: |
+          Write-Host ""
+          Write-Host "================================================"
+          Write-Host "  BUILD COMPLETE"
+          Write-Host "================================================"
+          Write-Host ""
+          Write-Host "Release Tag:      ${{ steps.get_tag.outputs.RELEASE_TAG }}"
+          Write-Host "Installer:        $env:INSTALLER_NAME"
+          Write-Host "Firebase Path:    $env:FIREBASE_PATH"
+          Write-Host "Download URL:     $env:DOWNLOAD_URL"
+          Write-Host ""
+          Write-Host "================================================"
+          
+          # GitHub Actions summary
+          @"
+          ## 🎉 Windows Installer Built Successfully
+          
+          ### 📦 Build Details
+          - **Release Tag:** \`${{ steps.get_tag.outputs.RELEASE_TAG }}\`
+          - **Installer:** \`$env:INSTALLER_NAME\`
+          - **Size:** $(Get-Item $env:INSTALLER_PATH | Select-Object -ExpandProperty Length | ForEach-Object { [math]::Round($_ / 1MB, 2) }) MB
+          
+          ### ☁️ Firebase Storage
+          - **Path:** \`$env:FIREBASE_PATH\`
+          - **Download URL:** [Click to download]($env:DOWNLOAD_URL)
+          
+          ### 📥 GitHub Artifact
+          - Available in Actions artifacts for 90 days
+          - Artifact name: \`windows-installer-${{ steps.get_tag.outputs.RELEASE_TAG }}\`
+          
+          ---
+          **Workflow:** ${{ github.workflow }}  
+          **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          "@ >> $env:GITHUB_STEP_SUMMARY
+
+      # ============================================================
+      # 15. Failure notification
+      # ============================================================
+      - name: Build failed notification
+        if: failure()
+        shell: pwsh
+        run: |
+          Write-Host ""
+          Write-Host "================================================"
+          Write-Host "  ❌ BUILD FAILED"
+          Write-Host "================================================"
+          Write-Host ""
+          Write-Host "Check the logs above for detailed error messages."
+          Write-Host ""
+          exit 1

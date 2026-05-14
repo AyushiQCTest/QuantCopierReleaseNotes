@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantCopier - Release Notes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 56rem;
+            margin: 0 auto;
+            padding: 3rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .release {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .timeline-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .dot {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 4px solid #1e293b;
+            z-index: 10;
+        }
+
+        .line {
+            width: 0.25rem;
+            height: 8rem;
+            background: linear-gradient(to bottom, #3b82f6, #1e293b);
+            margin-top: 0.5rem;
+        }
+
+        .release:last-child .line {
+            display: none;
+        }
+
+        .release-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            flex: 1;
+            transition: border-color 0.3s;
+        }
+
+        .release-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .release-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .version {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border-radius: 9999px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .date {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .description {
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .features .section-title {
+            color: #4ade80;
+        }
+
+        .fixes .section-title {
+            color: #f87171;
+        }
+
+        .improvements .section-title {
+            color: #facc15;
+        }
+
+        .item-list {
+            list-style: none;
+        }
+
+        .item {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-symbol {
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .features .item-symbol {
+            color: #4ade80;
+        }
+
+        .fixes .item-symbol {
+            color: #f87171;
+        }
+
+        .improvements .item-symbol {
+            color: #facc15;
+        }
+
+        footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(71, 85, 105, 0.5);
+            text-align: center;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: #93c5fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>QuantCopier</h1>
+            <div class="subtitle">Release Notes & Changelog</div>
+            <div class="tagline">MT5 Signal Copier from Telegram</div>
+        </header>
+
+        <div class="timeline">
+            <!-- v1.2.0 -->
+            <div class="release">
+                <div class="timeline-marker">
+                    <div class="dot"></div>
+                    <div class="line"></div>
+                </div>
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="version">v1.2.0</span>
+                        <span class="badge">Latest</span>
+                    </div>
+                    <div class="date">January 2, 2025</div>
+                    <div class="title">SMS OTP Fix & Enhanced Telegram Auth</div>
+                    <div class="description">Major update with improved Telegram authentication and SMS-based OTP delivery</div>
+
+                    <div class="section features">
+                        <div class="section-title">✨ New Features</div>
+                        <ul class="item-list">
+                            <li class="item"><span class="item-symbol">+</span> Automatic SMS resend when app-based code delivery is detected</li>
+                            <li class="item"><span class="item-symbol">+</span> Enhanced Telethon client initialization with better error handling</li>
+                            <li class="item"><span class="item-symbol">+</span> Improved session management with StringSession support</li>
+                            <li class="item"><span class="item-symbol">+</span> Backend health check with environment variable configuration</li>
+                        </ul>
+                    </div>
+
+                    <div class="section fixes">
+                        <div class="section-title">🐛 Bug Fixes</div>
+                        <ul class="item-list">
+                            <li class="item"><span class="item-symbol">-</span> Fixed OTP not arriving for users without other Telegram apps</li>
+                            <li class="item"><span class="item-symbol">-</span> Resolved 403 Forbidden errors in health checks</li>
+                            <li class="item"><span class="item-symbol">-</span> Fixed API URL configuration to support custom backends</li>
+                            <li class="item"><span class="item-symbol">-</span> Corrected Telethon SMS resend logic</li>
+                        </ul>
+                    </div>
+
+                    <div class="section improvements">
+                        <div class="section-title">⚡ Improvements</div>
+                        <ul class="item-list">
+                            <li class="item"><span class="item-symbol">→</span> Added comprehensive debug logging to login endpoint</li>
+                            <li class="item"><span class="item-symbol">→</span> Improved error messages with detailed traceback output</li>
+                            <li class="item"><span class="item-symbol">→</span> Better handling of SentCodeTypeApp responses</li>
+                            <li class="item"><span class="item-symbol">→</span> Enhanced phone number validation with +91 support</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v1.1.5 -->
+            <div class="release">
+                <div class="timeline-marker">
+                    <div class="dot"></div>
+                    <div class="line"></div>
+                </div>
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="version">v1.1.5</span>
+                    </div>
+                    <div class="date">December 28, 2024</div>
+                    <div class="title">UI Polish & Performance Optimizations</div>
+                    <div class="description">Bug fixes and UI improvements across the application</div>
+
+                    <div class="section features">
+                        <div class="section-title">✨ New Features</div>
+                        <ul class="item-list">
+                            <li class="item"><span class="item-symbol">+</span> New Release Notes page (you are here!)</li>
+                            <li class="item"><span class="item-symbol">+</span> Improved profile dropdown with license management</li>
+                            <li class="item"><span class="item-symbol">+</span> Better theme support (light/dark mode)</li>
+                        </ul>
+                    </div>
+
+                    <div class="section fixes">
+                        <div class="section-title">🐛 Bug Fixes</div>
+                        <ul class="item-list">
+                            <li class="item"><span class="item-symbol">-</span> Fixed image aspect ratio warnings in auth layout</li>
+                            <li class="item"><span class="item-symbol">-</span> Resolved state management issues in phone form</li>
+                            <li class="item"><span class="item-symbol">-</span> Fixed CORS configuration for better frontend-backend communication</li>
+                        </ul>
+                    </div>
+
+                    <div class="section improvements">
+                        <div class="section-title">⚡ Improvements</div>
+                        <ul class="item-list">
+                            <li class="item"><span class="item-symbol">→</span> Optimized Next.js with Turbopack</li>
+                            <li class="item"><span class="item-symbol">→</span> Faster initial load times</li>
+                            <li class="item"><span class="item-symbol">→</span> Better error handling and logging</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- v1.1.0 -->
+            <div class="release">
+                <div class="timeline-marker">
+                    <div class="dot"></div>
+                </div>
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="version">v1.1.0</span>
+                    </div>
+                    <div class="date">December 24, 2024</div>
+                    <div class="title">Initial Public Release</div>
+                    <div class="description">First stable release of QuantCopier for MT5</div>
+
+                    <div class="section features">
+                        <div class="section-title">✨ New Features</div>
+                        <ul class="item-list">
+                            <li class="item"><span class="item-symbol">+</span> Copy trading signals from Telegram channels to MT5</li>
+                            <li class="item"><span class="item-symbol">+</span> Multi-channel support with symbol mapping</li>
+                            <li class="item"><span class="item-symbol">+</span> Real-time trade execution</li>
+                            <li class="item"><span class="item-symbol">+</span> User authentication via Telegram</li>
+                            <li class="item"><span class="item-symbol">+</span> License management system</li>
+                            <li class="item"><span class="item-symbol">+</span> Dark/Light theme support</li>
+                            <li class="item"><span class="item-symbol">+</span> Firebase integration for subscription validation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>For issues or feature requests, contact <a href="mailto:support@quanttradertools.com">support@quanttradertools.com</a></p>
+        </footer>
+    </div>
+</body>
+</html>
