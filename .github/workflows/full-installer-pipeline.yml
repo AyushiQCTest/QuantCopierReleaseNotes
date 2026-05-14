@@ -208,13 +208,15 @@ jobs:
           Write-Host "Embedding version metadata: $version"
           Write-Host "EXE path: $exePath"
           
-          # Create Python script to embed version using pefile
-          $pythonScript = @"
+          # Create Python script file
+          $scriptPath = "$env:TEMP\embed_version.py"
+          
+          @'
 import pefile
 import sys
 
-exe_path = r"$exePath"
-version = "$version"
+exe_path = r"{0}"
+version = "{1}"
 
 try:
     # Parse the version string (e.g., "1.3.1" -> 1,3,1,0)
@@ -235,17 +237,13 @@ try:
     
     # Write back to file
     pe.write(exe_path)
-    print(f"✓ Version metadata embedded: {version}")
+    print("✓ Version metadata embedded: {1}")
     sys.exit(0)
 except Exception as e:
-    print(f"⚠ Could not embed version via pefile: {str(e)}")
-    print(f"   Version from PyInstaller spec will be used")
-    sys.exit(0)  # Don't fail - PyInstaller spec already has version
-"@
-          
-          # Write script to temp file
-          $scriptPath = "$env:TEMP\embed_version.py"
-          Set-Content -Path $scriptPath -Value $pythonScript -Encoding UTF8
+    print(f"⚠ Could not embed version: {{str(e)}}")
+    print("   Version from PyInstaller spec will be used")
+    sys.exit(0)
+'@ -f $exePath, $version | Set-Content -Path $scriptPath -Encoding UTF8
           
           # Run Python script
           python $scriptPath
