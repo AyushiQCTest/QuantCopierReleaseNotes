@@ -80,7 +80,7 @@ export default function Home() {
         {/* Back Button */}
         <button
           onClick={() => window.close()}
-          className="mb-8 flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors text-sm"
+          className="mb-8 flex items-center gap-2 text-slate-300 hover:text-blue-300 transition-colors text-sm font-medium"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -90,11 +90,11 @@ export default function Home() {
 
         {/* Header */}
         <header className="text-center mb-12">
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent mb-4">
             QuantCopier
           </h1>
-          <p className="text-2xl text-slate-300 mb-2">Release Notes & Changelog</p>
-          <p className="text-slate-400">Stay updated with the latest features, fixes, and improvements</p>
+          <p className="text-2xl text-slate-100 font-semibold mb-2">Release Notes & Changelog</p>
+          <p className="text-slate-200">Stay updated with the latest features, fixes, and improvements</p>
         </header>
 
         {/* Error State */}
@@ -127,14 +127,14 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <footer className="mt-16 pt-8 border-t border-slate-700 text-center text-slate-500 text-sm">
-          <p>Follow us on GitHub for the latest updates</p>
+        <footer className="mt-16 pt-8 border-t border-slate-700 text-center text-slate-300 text-sm">
+          <p className="font-medium">Follow us on GitHub for the latest updates</p>
           <p className="mt-2">
             <a 
               href="https://github.com/quanttradertools/QuantCopierUI" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
+              className="text-blue-300 hover:text-blue-200 transition-colors font-medium"
             >
               github.com/quanttradertools
             </a>
@@ -168,8 +168,8 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
             {/* Header */}
             <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
               <div>
-                <h3 className="text-2xl font-bold text-blue-400">v{release.version}</h3>
-                <p className="text-sm text-slate-400 mt-1">{release.title}</p>
+                <h3 className="text-2xl font-bold text-blue-300">v{release.version}</h3>
+                <p className="text-sm text-slate-300 mt-1">{release.title}</p>
               </div>
               <div className="flex gap-2">
                 {release.prerelease && (
@@ -177,7 +177,7 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
                     Pre-release
                   </span>
                 )}
-                <span className="px-3 py-1 text-xs font-semibold bg-slate-700 text-slate-300 rounded-full">
+                <span className="px-3 py-1 text-xs font-semibold bg-slate-700 text-slate-200 rounded-full">
                   {release.date}
                 </span>
               </div>
@@ -187,12 +187,12 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
             <div className="space-y-4">
               {release.features && release.features.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-green-400 mb-2 flex items-center gap-2">
+                  <h4 className="font-bold text-green-400 mb-3 flex items-center gap-2 text-base">
                     <span>✨</span> Features
                   </h4>
-                  <ul className="space-y-1 ml-6">
+                  <ul className="space-y-2.5 ml-7">
                     {release.features.map((feature, i) => (
-                      <li key={i} className="text-slate-300 text-sm">
+                      <li key={i} className="text-slate-100 text-sm font-medium leading-relaxed">
                         • {feature}
                       </li>
                     ))}
@@ -202,12 +202,12 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
 
               {release.fixes && release.fixes.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-red-400 mb-2 flex items-center gap-2">
+                  <h4 className="font-bold text-red-400 mb-3 flex items-center gap-2 text-base">
                     <span>🐛</span> Bug Fixes
                   </h4>
-                  <ul className="space-y-1 ml-6">
+                  <ul className="space-y-2.5 ml-7">
                     {release.fixes.map((fix, i) => (
-                      <li key={i} className="text-slate-300 text-sm">
+                      <li key={i} className="text-slate-100 text-sm font-medium leading-relaxed">
                         • {fix}
                       </li>
                     ))}
@@ -217,12 +217,12 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
 
               {release.improvements && release.improvements.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-amber-400 mb-2 flex items-center gap-2">
+                  <h4 className="font-bold text-amber-400 mb-3 flex items-center gap-2 text-base">
                     <span>⚡</span> Improvements
                   </h4>
-                  <ul className="space-y-1 ml-6">
+                  <ul className="space-y-2.5 ml-7">
                     {release.improvements.map((improvement, i) => (
-                      <li key={i} className="text-slate-300 text-sm">
+                      <li key={i} className="text-slate-100 text-sm font-medium leading-relaxed">
                         • {improvement}
                       </li>
                     ))}
