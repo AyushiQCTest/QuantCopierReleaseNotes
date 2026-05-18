@@ -1,3 +1,16 @@
 {
-  "releases": []
+  "releases": [
+    {
+      "version": "1.3.2",
+      "title": "Release v1.3.2",
+      "date": "2026-05-18",
+      "prerelease": false,
+      "draft": false,
+      "features": [],
+      "fixes": [],
+      "improvements": [],
+      "url": "https://github.com/AyushiQCTest/QuantCopierUI/releases/tag/v1.3.2",
+      "body": "## Changes in v1.3.2"
+    }
+  ]
 }
