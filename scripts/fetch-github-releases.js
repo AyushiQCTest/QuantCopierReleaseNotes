@@ -65,6 +65,10 @@ function parseReleaseBody(body) {
     improvements: []
   };
 
+  if (!body || body.trim() === '' || body === '## Changes in v') {
+    return result;
+  }
+
   let currentSection = null;
   const lines = body.split('\n');
 
