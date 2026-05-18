@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 * {
   margin: 0;
@@ -13,7 +13,26 @@ html {
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
+  color: #f1f5f9;
+  background: linear-gradient(to bottom right, #020617 0%, #0f172a 50%, #020617 100%);
+}
+
+/* Text color overrides for better visibility */
+h1, h2, h3, h4, h5, h6 {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+p, li, span {
   color: #e2e8f0;
+}
+
+a {
+  color: #60a5fa;
+}
+
+a:hover {
+  color: #93c5fd;
 }
 
 /* Scrollbar styling */

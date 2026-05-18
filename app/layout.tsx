@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 font-sans">
+    <html lang="en" className="bg-slate-950">
+      <body className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-50 font-sans min-h-screen">
         {children}
       </body>
     </html>
