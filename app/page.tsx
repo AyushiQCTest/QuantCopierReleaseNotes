@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, ExternalLink, Check, AlertCircle, Zap } from 'lucide-react';
 
 interface Release {
   version: string;
@@ -23,6 +24,7 @@ export default function Home() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadReleases() {
@@ -36,6 +38,10 @@ export default function Home() {
 
         const data: ReleasesData = await response.json();
         setReleases(data.releases || []);
+        // Expand first release by default
+        if (data.releases && data.releases.length > 0) {
+          setExpandedVersion(data.releases[0].version);
+        }
       } catch (err) {
         console.error('Error loading releases:', err);
         setError(err instanceof Error ? err.message : 'Failed to load releases');
@@ -47,10 +53,18 @@ export default function Home() {
     loadReleases();
   }, []);
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
-        <div className="max-w-2xl mx-auto px-4 py-24">
+        <div className="max-w-4xl mx-auto px-4 py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
             <p className="text-slate-400">Loading release notes...</p>
@@ -62,39 +76,44 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100">
-      <div className="max-w-2xl mx-auto px-4 py-16">
+      <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Back Button */}
         <button
           onClick={() => window.close()}
-          className="mb-8 flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors"
+          className="mb-8 flex items-center gap-2 text-slate-400 hover:text-blue-400 transition-colors text-sm"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           <span>Back to App</span>
         </button>
 
         {/* Header */}
-        <header className="text-center mb-16">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent mb-4">
+        <header className="text-center mb-12">
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-4">
             QuantCopier
           </h1>
-          <p className="text-xl text-slate-400 mb-2">Release Notes & Changelog</p>
-          <p className="text-sm text-slate-500">Latest updates and improvements</p>
+          <p className="text-2xl text-slate-300 mb-2">Release Notes & Changelog</p>
+          <p className="text-slate-400">Stay updated with the latest features, fixes, and improvements</p>
         </header>
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-8 text-red-200">
-            <p className="font-semibold">⚠️ Error Loading Releases</p>
-            <p className="text-sm mt-1">{error}</p>
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-5 mb-8 text-red-200">
+            <p className="font-semibold flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Error Loading Releases
+            </p>
+            <p className="text-sm mt-2">{error}</p>
           </div>
         )}
 
         {/* Empty State */}
         {!error && releases.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-slate-400">No releases found. Check back soon!</p>
+          <div className="text-center py-16 bg-slate-800/30 rounded-lg border border-slate-700">
+            <p className="text-slate-400 text-lg mb-2">No releases found yet</p>
+            <p className="text-slate-500 text-sm">Check back soon for updates!</p>
+            <p className="text-slate-600 text-xs mt-4">Follow us on <a href="https://github.com/quanttradertools" className="text-blue-400 hover:underline">GitHub</a> for announcements</p>
           </div>
         )}
 
