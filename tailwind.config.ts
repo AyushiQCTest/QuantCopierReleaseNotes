@@ -26,6 +26,9 @@ const config: Config = {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
+      gridTemplateColumns: {
+        'sidebar': '256px 1fr',
+      },
     },
   },
   plugins: [],
