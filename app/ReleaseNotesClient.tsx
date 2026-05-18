@@ -81,84 +81,108 @@ export function ReleaseNotesClient() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50">
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Top Bar with Back Button and Theme Toggle */}
-        <div className="flex justify-between items-center mb-8">
-          <button
-            onClick={() => window.close()}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm font-medium"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            <span>Back to App</span>
-          </button>
-          
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
-            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          >
-            {theme === 'light' ? (
-              <Moon className="w-5 h-5 text-gray-700" />
-            ) : (
-              <Sun className="w-5 h-5 text-yellow-400" />
-            )}
-          </button>
+      <div className="flex">
+        {/* Main Content */}
+        <div className="flex-1 max-w-3xl px-4 py-12">
+          {/* Top Bar with Back Button and Theme Toggle */}
+          <div className="flex justify-between items-center mb-8">
+            <button
+              onClick={() => window.close()}
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm font-medium"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Back to App</span>
+            </button>
+            
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-gray-700" />
+              ) : (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              )}
+            </button>
+          </div>
+
+          {/* Header */}
+          <header className="text-center mb-12">
+            <h1 className="text-6xl font-bold text-black dark:text-white mb-4">
+              Release Notes
+            </h1>
+            <p className="text-2xl text-gray-700 dark:text-gray-300 font-semibold mb-2">QuantCopier</p>
+            <p className="text-gray-600 dark:text-gray-400">Stay updated with the latest features, fixes, and improvements</p>
+          </header>
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-lg p-5 mb-8 text-red-800 dark:text-red-300">
+              <p className="font-semibold flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Error Loading Releases
+              </p>
+              <p className="text-sm mt-2">{error}</p>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!error && releases.length === 0 && (
+            <div className="text-center py-16 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-300 dark:border-slate-700">
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No releases found yet</p>
+              <p className="text-gray-500 dark:text-gray-500 text-sm">Check back soon for updates!</p>
+              <p className="text-gray-600 dark:text-gray-400 text-xs mt-4">Follow us on <a href="https://github.com/quanttradertools" className="text-blue-600 dark:text-blue-400 hover:underline">GitHub</a> for announcements</p>
+            </div>
+          )}
+
+          {/* Timeline */}
+          {releases.length > 0 && (
+            <div className="space-y-8">
+              {releases.map((release, index) => (
+                <ReleaseCard key={release.version} release={release} isFirst={index === 0} />
+              ))}
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="mt-16 pt-8 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
+            <p className="font-medium">Follow us on GitHub for the latest updates</p>
+            <p className="mt-2">
+              <a 
+                href="https://github.com/quanttradertools/QuantCopierUI" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium"
+              >
+                github.com/quanttradertools
+              </a>
+            </p>
+          </footer>
         </div>
 
-        {/* Header */}
-        <header className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-black dark:text-white mb-4">
-            Release Notes
-          </h1>
-          <p className="text-2xl text-gray-700 dark:text-gray-300 font-semibold mb-2">QuantCopier</p>
-          <p className="text-gray-600 dark:text-gray-400">Stay updated with the latest features, fixes, and improvements</p>
-        </header>
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-lg p-5 mb-8 text-red-800 dark:text-red-300">
-            <p className="font-semibold flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
-              Error Loading Releases
-            </p>
-            <p className="text-sm mt-2">{error}</p>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!error && releases.length === 0 && (
-          <div className="text-center py-16 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-300 dark:border-slate-700">
-            <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No releases found yet</p>
-            <p className="text-gray-500 dark:text-gray-500 text-sm">Check back soon for updates!</p>
-            <p className="text-gray-600 dark:text-gray-400 text-xs mt-4">Follow us on <a href="https://github.com/quanttradertools" className="text-blue-600 dark:text-blue-400 hover:underline">GitHub</a> for announcements</p>
-          </div>
-        )}
-
-        {/* Timeline */}
-        {releases.length > 0 && (
-          <div className="space-y-8">
-            {releases.map((release, index) => (
-              <ReleaseCard key={release.version} release={release} isFirst={index === 0} />
+        {/* Sidebar - Versions List */}
+        <div className="hidden lg:block w-64 px-6 py-12 sticky top-0 h-screen overflow-y-auto bg-gray-50 dark:bg-slate-900/50 border-l border-gray-300 dark:border-slate-700">
+          <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">Versions</h2>
+          <div className="space-y-2">
+            {releases.map((release) => (
+              <a
+                key={release.version}
+                href={`#${release.version}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const element = document.getElementById(release.version);
+                  element?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="block px-3 py-2 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-800 transition-colors"
+              >
+                Version {release.version}
+              </a>
             ))}
           </div>
-        )}
-
-        {/* Footer */}
-        <footer className="mt-16 pt-8 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
-          <p className="font-medium">Follow us on GitHub for the latest updates</p>
-          <p className="mt-2">
-            <a 
-              href="https://github.com/quanttradertools/QuantCopierUI" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium"
-            >
-              github.com/quanttradertools
-            </a>
-          </p>
-        </footer>
+        </div>
       </div>
     </div>
   );
@@ -166,7 +190,7 @@ export function ReleaseNotesClient() {
 
 function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean }) {
   return (
-    <div className="relative">
+    <div className="relative" id={release.version}>
       {/* Timeline Line */}
       {!isFirst && (
         <div className="absolute left-6 top-0 w-0.5 h-8 bg-gradient-to-b from-gray-300 dark:from-slate-700 to-transparent -translate-y-8"></div>
@@ -209,7 +233,7 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
                   <h4 className="font-bold text-green-700 dark:text-green-400 mb-3 flex items-center gap-2 text-base">
                     <span>✨</span> Features
                   </h4>
-                  <ul className="space-y-2.5 ml-7">
+                  <ul className="space-y-2.5 ml-7 pl-4">
                     {release.features.map((feature, i) => (
                       <li key={i} className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed">
                         • {feature}
@@ -224,7 +248,7 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
                   <h4 className="font-bold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2 text-base">
                     <span>🐛</span> Bug Fixes
                   </h4>
-                  <ul className="space-y-2.5 ml-7">
+                  <ul className="space-y-2.5 ml-7 pl-4">
                     {release.fixes.map((fix, i) => (
                       <li key={i} className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed">
                         • {fix}
@@ -239,7 +263,7 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
                   <h4 className="font-bold text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2 text-base">
                     <span>⚡</span> Improvements
                   </h4>
-                  <ul className="space-y-2.5 ml-7">
+                  <ul className="space-y-2.5 ml-7 pl-4">
                     {release.improvements.map((improvement, i) => (
                       <li key={i} className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed">
                         • {improvement}
