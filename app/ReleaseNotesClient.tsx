@@ -80,9 +80,9 @@ export function ReleaseNotesClient() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 grid grid-cols-[256px_1fr]">
+    <div className="h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 grid grid-cols-[256px_1fr]">
       {/* Sidebar - Versions List */}
-      <div className="px-6 py-12 sticky top-0 h-screen overflow-y-auto bg-gray-50 dark:bg-slate-900/50 border-r border-gray-300 dark:border-slate-700">
+      <div className="px-6 py-12 overflow-y-auto bg-gray-50 dark:bg-slate-900/50 border-r border-gray-300 dark:border-slate-700">
         <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">Versions</h2>
         <div className="space-y-2">
           {releases.map((release) => (
@@ -103,7 +103,7 @@ export function ReleaseNotesClient() {
       </div>
 
       {/* Main Content */}
-      <div className="px-8 py-12 overflow-y-auto">
+      <div className="px-8 py-12 overflow-y-auto max-h-screen">
         <div className="max-w-3xl mx-auto">
           {/* Top Bar with Back Button and Theme Toggle */}
           <div className="flex justify-between items-center mb-8">
