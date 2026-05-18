@@ -80,7 +80,10 @@ export function ReleaseNotesClient() {
   }
 
   return (
-    <div className="h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 grid grid-cols-sidebar">
+    <div 
+      className="h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50"
+      style={{ display: 'grid', gridTemplateColumns: '256px 1fr' }}
+    >
       {/* Sidebar - Versions List */}
       <div className="px-6 py-12 overflow-y-auto bg-gray-50 dark:bg-slate-900/50 border-r border-gray-300 dark:border-slate-700">
         <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">Versions</h2>
