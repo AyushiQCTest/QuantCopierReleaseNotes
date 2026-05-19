@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTheme } from './providers/ThemeProvider';
-import { ChevronDown, ChevronUp, ExternalLink, Check, AlertCircle, Zap, Sun, Moon } from 'lucide-react';
+import { ExternalLink, AlertCircle, Sun, Moon } from 'lucide-react';
 
 interface Release {
   version: string;
@@ -68,8 +68,8 @@ export function ReleaseNotesClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50">
-        <div className="max-w-4xl mx-auto px-4 py-24">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50">
+        <div className="max-w-6xl mx-auto px-4 py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">Loading release notes...</p>
@@ -81,13 +81,100 @@ export function ReleaseNotesClient() {
 
   return (
     <div 
-      className="h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50"
-      style={{ display: 'grid', gridTemplateColumns: '256px 1fr' }}
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50"
+      style={{ display: 'grid', gridTemplateColumns: '1fr 280px' }}
     >
-      {/* Sidebar - Versions List */}
-      <div className="px-6 py-12 overflow-y-auto bg-gray-50 dark:bg-slate-900/50 border-r border-gray-300 dark:border-slate-700">
-        <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">Versions</h2>
-        <div className="space-y-2">
+      {/* Main Content */}
+      <div className="px-8 py-12 overflow-y-auto lg:px-12">
+        <div className="max-w-4xl">
+          {/* Top Bar with Back Button and Theme Toggle */}
+          <div className="flex justify-between items-center mb-12">
+            <button
+              onClick={() => window.close()}
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 text-sm font-medium px-3 py-2 rounded-lg hover:bg-white/50 dark:hover:bg-slate-800/50"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Back to App</span>
+            </button>
+            
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5 text-gray-700" />
+              ) : (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              )}
+            </button>
+          </div>
+
+          {/* Header */}
+          <header className="mb-16">
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-7xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
+                  Release Notes
+                </h1>
+                <p className="text-3xl font-bold text-gray-800 dark:text-white">QuantCopier</p>
+              </div>
+              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">Stay updated with the latest features, fixes, and improvements to your trading signal copier</p>
+            </div>
+          </header>
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-xl p-5 mb-8 text-red-800 dark:text-red-300 shadow-sm">
+              <p className="font-semibold flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Error Loading Releases
+              </p>
+              <p className="text-sm mt-2">{error}</p>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!error && releases.length === 0 && (
+            <div className="text-center py-16 bg-white/50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No releases found yet</p>
+              <p className="text-gray-500 dark:text-gray-500 text-sm">Check back soon for updates!</p>
+            </div>
+          )}
+
+          {/* Timeline */}
+          {releases.length > 0 && (
+            <div className="space-y-8">
+              {releases.map((release, index) => (
+                <ReleaseCard key={release.version} release={release} isFirst={index === 0} />
+              ))}
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="mt-20 pt-12 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
+            <p className="font-medium mb-4">Follow us on GitHub for the latest updates</p>
+            <p>
+              <a 
+                href="https://github.com/quanttradertools/QuantCopierUI" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium inline-flex items-center gap-2"
+              >
+                github.com/quanttradertools
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </p>
+          </footer>
+        </div>
+      </div>
+
+      {/* Sidebar - Versions List (Right Side) */}
+      <div className="px-6 py-12 overflow-y-auto bg-white/40 dark:bg-slate-900/40 border-l border-gray-300 dark:border-slate-700 sticky top-0 h-screen hidden lg:block">
+        <div className="space-y-3">
+          <h2 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest px-3">Versions</h2>
           {releases.map((release) => (
             <a
               key={release.version}
@@ -97,7 +184,7 @@ export function ReleaseNotesClient() {
                 const element = document.getElementById(release.version);
                 element?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="block px-3 py-2 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-800 transition-colors"
+              className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800/50"
             >
               Version {release.version}
             </a>
@@ -122,7 +209,7 @@ export function ReleaseNotesClient() {
             
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+              className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'light' ? (
@@ -134,17 +221,21 @@ export function ReleaseNotesClient() {
           </div>
 
           {/* Header */}
-          <header className="text-center mb-12">
-            <h1 className="text-6xl font-bold text-black dark:text-white mb-4">
-              Release Notes
-            </h1>
-            <p className="text-2xl text-gray-700 dark:text-gray-300 font-semibold mb-2">QuantCopier</p>
-            <p className="text-gray-600 dark:text-gray-400">Stay updated with the latest features, fixes, and improvements</p>
+          <header className="mb-16">
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-7xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
+                  Release Notes
+                </h1>
+                <p className="text-3xl font-bold text-gray-800 dark:text-white">QuantCopier</p>
+              </div>
+              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">Stay updated with the latest features, fixes, and improvements to your trading signal copier</p>
+            </div>
           </header>
 
           {/* Error State */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-lg p-5 mb-8 text-red-800 dark:text-red-300">
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-xl p-5 mb-8 text-red-800 dark:text-red-300 shadow-sm">
               <p className="font-semibold flex items-center gap-2">
                 <AlertCircle className="w-5 h-5" />
                 Error Loading Releases
@@ -155,10 +246,9 @@ export function ReleaseNotesClient() {
 
           {/* Empty State */}
           {!error && releases.length === 0 && (
-            <div className="text-center py-16 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-300 dark:border-slate-700">
+            <div className="text-center py-16 bg-white/50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
               <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No releases found yet</p>
               <p className="text-gray-500 dark:text-gray-500 text-sm">Check back soon for updates!</p>
-              <p className="text-gray-600 dark:text-gray-400 text-xs mt-4">Follow us on <a href="https://github.com/quanttradertools" className="text-blue-600 dark:text-blue-400 hover:underline">GitHub</a> for announcements</p>
             </div>
           )}
 
@@ -172,16 +262,17 @@ export function ReleaseNotesClient() {
           )}
 
           {/* Footer */}
-          <footer className="mt-16 pt-8 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
-            <p className="font-medium">Follow us on GitHub for the latest updates</p>
-            <p className="mt-2">
+          <footer className="mt-20 pt-12 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
+            <p className="font-medium mb-4">Follow us on GitHub for the latest updates</p>
+            <p>
               <a 
                 href="https://github.com/quanttradertools/QuantCopierUI" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium inline-flex items-center gap-2"
               >
                 github.com/quanttradertools
+                <ExternalLink className="w-4 h-4" />
               </a>
             </p>
           </footer>
@@ -199,47 +290,50 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
         <div className="absolute left-6 top-0 w-0.5 h-8 bg-gradient-to-b from-gray-300 dark:from-slate-700 to-transparent -translate-y-8"></div>
       )}
 
-      {/* Card */}
+      {/* Card Container */}
       <div className="flex gap-6">
-        {/* Timeline Dot */}
+        {/* Timeline Dot with Gradient */}
         <div className="flex flex-col items-center">
-          <div className="relative z-10 w-12 h-12 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center shadow-lg">
+          <div className="relative z-10 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200">
             <span className="text-xl">🚀</span>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 pb-8">
-          <div className="bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-6 hover:border-gray-400 dark:hover:border-slate-600 transition-colors shadow-sm dark:shadow-slate-950">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-xl p-6 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm hover:shadow-md dark:shadow-slate-950/50">
             {/* Header */}
-            <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
+            <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
               <div>
-                <h3 className="text-2xl font-bold text-black dark:text-white">v{release.version} #</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{release.title}</p>
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  v{release.version}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">{release.title}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {release.prerelease && (
-                  <span className="px-3 py-1 text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full border border-yellow-300 dark:border-yellow-800">
+                  <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/40 dark:to-yellow-800/30 text-yellow-800 dark:text-yellow-300 rounded-full border border-yellow-300 dark:border-yellow-700/50 uppercase tracking-wide">
                     Pre-release
                   </span>
                 )}
-                <span className="px-3 py-1 text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-full border border-gray-300 dark:border-slate-700">
+                <span className="px-3 py-1 text-xs font-semibold bg-gradient-to-r from-gray-100 to-gray-50 dark:from-slate-800/50 dark:to-slate-700/50 text-gray-700 dark:text-gray-300 rounded-full border border-gray-300 dark:border-slate-600">
                   {release.date}
                 </span>
               </div>
             </div>
 
             {/* Sections */}
-            <div className="space-y-4">
+            <div className="space-y-5">
               {release.features && release.features.length > 0 && (
-                <div>
-                  <h4 className="font-bold text-green-700 dark:text-green-400 mb-3 flex items-center gap-2 text-base">
+                <div className="bg-gradient-to-br from-emerald-50 dark:from-emerald-900/20 to-transparent rounded-lg p-4 border border-emerald-200 dark:border-emerald-800/30">
+                  <h4 className="font-bold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2 text-base">
                     <span>✨</span> Features
                   </h4>
-                  <ul className="space-y-2.5 ml-12 pl-6">
+                  <ul className="space-y-2">
                     {release.features.map((feature, i) => (
-                      <li key={i} className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed">
-                        • {feature}
+                      <li key={i} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex gap-3">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">•</span>
+                        <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -247,14 +341,15 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
               )}
 
               {release.fixes && release.fixes.length > 0 && (
-                <div>
+                <div className="bg-gradient-to-br from-red-50 dark:from-red-900/20 to-transparent rounded-lg p-4 border border-red-200 dark:border-red-800/30">
                   <h4 className="font-bold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2 text-base">
                     <span>🐛</span> Bug Fixes
                   </h4>
-                  <ul className="space-y-2.5 ml-12 pl-6">
+                  <ul className="space-y-2">
                     {release.fixes.map((fix, i) => (
-                      <li key={i} className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed">
-                        • {fix}
+                      <li key={i} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex gap-3">
+                        <span className="text-red-600 dark:text-red-400 font-bold">•</span>
+                        <span>{fix}</span>
                       </li>
                     ))}
                   </ul>
@@ -262,14 +357,15 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
               )}
 
               {release.improvements && release.improvements.length > 0 && (
-                <div>
+                <div className="bg-gradient-to-br from-amber-50 dark:from-amber-900/20 to-transparent rounded-lg p-4 border border-amber-200 dark:border-amber-800/30">
                   <h4 className="font-bold text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2 text-base">
                     <span>⚡</span> Improvements
                   </h4>
-                  <ul className="space-y-2.5 ml-12 pl-6">
+                  <ul className="space-y-2">
                     {release.improvements.map((improvement, i) => (
-                      <li key={i} className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed">
-                        • {improvement}
+                      <li key={i} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex gap-3">
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
+                        <span>{improvement}</span>
                       </li>
                     ))}
                   </ul>
@@ -278,15 +374,15 @@ function ReleaseCard({ release, isFirst }: { release: Release; isFirst: boolean 
             </div>
 
             {/* Link to Full Release */}
-            <div className="mt-4 pt-4 border-t border-gray-300 dark:border-slate-700">
+            <div className="mt-5 pt-5 border-t border-gray-200 dark:border-slate-700">
               <a
                 href={release.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-semibold transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
                 View on GitHub
-                <span>→</span>
+                <ExternalLink className="w-4 h-4" />
               </a>
             </div>
           </div>
