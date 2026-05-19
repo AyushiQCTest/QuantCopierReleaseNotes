@@ -15,7 +15,7 @@ interface ReleaseListProps {
 export function ReleaseList({ releases }: ReleaseListProps) {
   if (releases.length === 0) {
     return (
-      <div className="text-center py-16 bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-gray-300 dark:border-slate-700">
+      <div className="text-center py-16 bg-white/50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
         <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">
           No releases found yet
         </p>

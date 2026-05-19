@@ -54,7 +54,7 @@ export function ReleaseNotesClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50">
         <div className="max-w-6xl mx-auto px-4 py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
@@ -71,20 +71,17 @@ export function ReleaseNotesClient() {
   if (siteConfig.sidebar.enabled) {
     return (
       <div
-        className="h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50"
-        style={{ display: 'grid', gridTemplateColumns: `${siteConfig.sidebar.width} 1fr` }}
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50"
+        style={{ display: 'grid', gridTemplateColumns: `1fr ${siteConfig.sidebar.width}` }}
       >
-        {/* Sidebar */}
-        <ReleaseSidebar releases={releases} />
-
         {/* Main Content */}
-        <div className="px-8 py-12 overflow-y-auto max-h-screen">
-          <div className="max-w-3xl mx-auto">
+        <div className="px-8 py-12 overflow-y-auto lg:px-12">
+          <div className="max-w-4xl">
             <Header />
 
             {/* Error State */}
             {error && (
-              <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-lg p-5 mb-8 text-red-800 dark:text-red-300">
+              <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-xl p-5 mb-8 text-red-800 dark:text-red-300 shadow-sm">
                 <p className="font-semibold flex items-center gap-2">
                   <AlertCircle className="w-5 h-5" />
                   Error Loading Releases
@@ -100,19 +97,22 @@ export function ReleaseNotesClient() {
             <Footer />
           </div>
         </div>
+
+        {/* Sidebar - Versions (Right Side) */}
+        <ReleaseSidebar releases={releases} />
       </div>
     );
   }
 
   // Single column layout (no sidebar)
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50">
-      <div className="max-w-3xl mx-auto px-8 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50">
+      <div className="max-w-4xl mx-auto px-8 py-12 lg:px-12">
         <Header />
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-lg p-5 mb-8 text-red-800 dark:text-red-300">
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-xl p-5 mb-8 text-red-800 dark:text-red-300 shadow-sm">
             <p className="font-semibold flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />
               Error Loading Releases

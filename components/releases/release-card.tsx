@@ -25,57 +25,70 @@ export function ReleaseCard({ release, isFirst }: ReleaseCardProps) {
 
       {/* Card Container */}
       <div className="flex gap-6">
-        {/* Timeline Dot */}
+        {/* Timeline Dot with Gradient */}
         <div className="flex flex-col items-center">
-          <div className={`relative z-10 ${releaseConfig.timeline.iconSize} rounded-full ${releaseConfig.timeline.dotColor} flex items-center justify-center shadow-lg`}>
+          <div className="relative z-10 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200">
             <span className="text-xl">🚀</span>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 pb-8">
-          <div className="bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg p-6 hover:border-gray-400 dark:hover:border-slate-600 transition-colors shadow-sm dark:shadow-slate-950">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-xl p-6 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm hover:shadow-md dark:shadow-slate-950/50">
             {/* Header */}
-            <div className="mb-4 flex items-start justify-between flex-wrap gap-2">
+            <div className="mb-4 flex items-start justify-between flex-wrap gap-3">
               <div>
-                <h3 className="text-2xl font-bold text-black dark:text-white">
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                   v{release.version}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
                   {release.title}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {release.prerelease && (
-                  <span className="px-3 py-1 text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full border border-yellow-300 dark:border-yellow-800">
+                  <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-yellow-100 to-yellow-50 dark:from-yellow-900/40 dark:to-yellow-800/30 text-yellow-800 dark:text-yellow-300 rounded-full border border-yellow-300 dark:border-yellow-700/50 uppercase tracking-wide">
                     Pre-release
                   </span>
                 )}
-                <span className="px-3 py-1 text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-full border border-gray-300 dark:border-slate-700">
+                <span className="px-3 py-1 text-xs font-semibold bg-gradient-to-r from-gray-100 to-gray-50 dark:from-slate-800/50 dark:to-slate-700/50 text-gray-700 dark:text-gray-300 rounded-full border border-gray-300 dark:border-slate-600">
                   {release.date}
                 </span>
               </div>
             </div>
 
             {/* Sections */}
-            <div className="space-y-4">
+            <div className="space-y-5">
               {Object.entries(release.sections).map(([sectionKey, items]) => {
                 const config = releaseConfig.sections[sectionKey as keyof typeof releaseConfig.sections];
                 if (!config || items.length === 0) return null;
 
+                const bgGradient = 
+                  sectionKey === 'features' ? 'from-emerald-50 dark:from-emerald-900/20' :
+                  sectionKey === 'fixes' ? 'from-red-50 dark:from-red-900/20' :
+                  'from-amber-50 dark:from-amber-900/20';
+
+                const borderColor =
+                  sectionKey === 'features' ? 'border-emerald-200 dark:border-emerald-800/30' :
+                  sectionKey === 'fixes' ? 'border-red-200 dark:border-red-800/30' :
+                  'border-amber-200 dark:border-amber-800/30';
+
+                const bulletColor =
+                  sectionKey === 'features' ? 'text-emerald-600 dark:text-emerald-400' :
+                  sectionKey === 'fixes' ? 'text-red-600 dark:text-red-400' :
+                  'text-amber-600 dark:text-amber-400';
+
                 return (
-                  <div key={sectionKey}>
+                  <div key={sectionKey} className={`bg-gradient-to-br ${bgGradient} to-transparent rounded-lg p-4 border ${borderColor}`}>
                     <h4 className={`font-bold ${config.textColor} mb-3 flex items-center gap-2 text-base`}>
                       <span>{config.icon}</span>
                       {config.label}
                     </h4>
-                    <ul className="space-y-2.5 ml-12 pl-6">
+                    <ul className="space-y-2">
                       {items.map((item, i) => (
-                        <li
-                          key={i}
-                          className="text-gray-700 dark:text-gray-300 text-sm font-medium leading-relaxed"
-                        >
-                          • {item}
+                        <li key={i} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed flex gap-3">
+                          <span className={`${bulletColor} font-bold`}>•</span>
+                          <span>{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -85,12 +98,12 @@ export function ReleaseCard({ release, isFirst }: ReleaseCardProps) {
             </div>
 
             {/* Link to Full Release */}
-            <div className="mt-4 pt-4 border-t border-gray-300 dark:border-slate-700">
+            <div className="mt-5 pt-5 border-t border-gray-200 dark:border-slate-700">
               <Link
                 href={release.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-semibold transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
                 View on GitHub
                 <ExternalLink className="w-4 h-4" />
