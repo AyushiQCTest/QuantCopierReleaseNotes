@@ -13,7 +13,6 @@
     "ci:build": "npm run fetch:releases && npm run build"
   },
   "dependencies": {
-    "clsx": "^2.0.0",
     "lucide-react": "^0.408.0",
     "next": "^16.1.0",
     "react": "^19.0.0",
@@ -24,7 +23,9 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "autoprefixer": "^10.5.0",
+    "clsx": "^2.1.1",
     "postcss": "^8.5.14",
+    "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^5",
     "zod": "^4.4.3"
