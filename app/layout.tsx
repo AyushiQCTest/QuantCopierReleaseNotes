@@ -17,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-screen">
-      <body className="h-screen overflow-hidden bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 font-sans transition-colors">
+    <html lang="en">
+      <body className="bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 font-sans transition-colors">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

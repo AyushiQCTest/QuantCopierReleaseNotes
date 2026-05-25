@@ -1,74 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 html {
   scroll-behavior: smooth;
 }
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  line-height: 1.6;
-  color: #000000;
-  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f0f9ff 100%);
-  transition: background-color 0.3s, color 0.3s;
-  min-height: 100vh;
-}
-
-html.dark body {
-  color: #f1f5f9;
-  background: linear-gradient(135deg, #0f172a 0%, #0f172a 50%, #1e293b 100%);
-}
-
-/* Text color overrides for better visibility */
-h1, h2, h3, h4, h5, h6 {
-  color: #000000;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4,
-html.dark h5,
-html.dark h6 {
-  color: #ffffff;
-}
-
-p, li, span {
-  color: #1f2937;
-}
-
-html.dark p,
-html.dark li,
-html.dark span {
-  color: #e2e8f0;
-}
-
-a {
-  color: #2563eb;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: #1d4ed8;
-}
-
-html.dark a {
-  color: #60a5fa;
-}
-
-html.dark a:hover {
-  color: #93c5fd;
-}
-
-/* Selection styling */
 ::selection {
   background-color: #3b82f6;
   color: white;
@@ -77,26 +16,6 @@ html.dark a:hover {
 html.dark ::selection {
   background-color: #60a5fa;
   color: #0f172a;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-html.dark ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 8px;
-  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {

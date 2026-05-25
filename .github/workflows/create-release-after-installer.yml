@@ -86,7 +86,7 @@ jobs:
         if: steps.check-release.outputs.exists == 'false'
         uses: actions/github-script@v7
         with:
-          repository: AyushiQCTest/QuantCopierUI
+         # repository: AyushiQCTest/QuantCopierUI
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const version = "${{ steps.version.outputs.VERSION }}";
@@ -111,6 +111,32 @@ jobs:
                 throw error;
               }
             }
+
+      - name: Create release on qcdemo repo
+        if: steps.check-release.outputs.exists == 'false'
+        shell: bash
+        run: |
+          TAG="${{ steps.version.outputs.TAG }}"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          
+          # Check if qcdemo repo is already cloned
+          if [ ! -d "qcdemo" ]; then
+            git clone https://github.com/AyushiQCTest/qcdemo.git qcdemo
+          fi
+          
+          cd qcdemo
+          git fetch origin
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "⚠️  Tag $TAG already exists on qcdemo"
+          else
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git tag "$TAG" -m "Release $TAG - Synced from QuantCopierUI"
+            git push origin "$TAG"
+            echo "✅ Created tag $TAG on qcdemo repo"
+          fi
 
       - name: Trigger release notes fetch
         if: steps.check-release.outputs.exists == 'false'
