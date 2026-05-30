@@ -233,6 +233,52 @@ jobs:
         working-directory: ${{ env.FRONTEND_PATH }}\Backend
         run: |
           .\.venv\Scripts\Activate.ps1
+
+          # Build must package real runtime configuration, not placeholders.
+          # Support secrets named with APP_ prefix or without (fallback).
+          $fb_db = "${{ secrets.APP_FIREBASE_DATABASE_URL }}"
+          if ([string]::IsNullOrWhiteSpace($fb_db)) { $fb_db = "${{ secrets.FIREBASE_DATABASE_URL }}" }
+          $fb_token = "${{ secrets.APP_FIREBASE_AUTH_TOKEN }}"
+          if ([string]::IsNullOrWhiteSpace($fb_token)) { $fb_token = "${{ secrets.FIREBASE_AUTH_TOKEN }}" }
+          $fb_creds_b64 = "${{ secrets.APP_FIREBASE_CREDENTIALS_JSON_B64 }}"
+          if ([string]::IsNullOrWhiteSpace($fb_creds_b64)) { $fb_creds_b64 = "${{ secrets.FIREBASE_CREDENTIALS_JSON_B64 }}" }
+
+          if ([string]::IsNullOrWhiteSpace($fb_db)) {
+            Write-Error "Missing required secret: APP_FIREBASE_DATABASE_URL or FIREBASE_DATABASE_URL"
+            exit 1
+          }
+          if ([string]::IsNullOrWhiteSpace($fb_token)) {
+            Write-Error "Missing required secret: APP_FIREBASE_AUTH_TOKEN or FIREBASE_AUTH_TOKEN"
+            exit 1
+          }
+          if ([string]::IsNullOrWhiteSpace($fb_creds_b64)) {
+            Write-Error "Missing required secret: APP_FIREBASE_CREDENTIALS_JSON_B64 or FIREBASE_CREDENTIALS_JSON_B64"
+            exit 1
+          }
+
+          $envContent = @(
+            "FIREBASE_CREDENTIALS_PATH=firebase-credentials.json",
+            "FIREBASE_DATABASE_URL=$fb_db",
+            "FIREBASE_AUTH_TOKEN=$fb_token"
+          ) -join "`n"
+          Set-Content -Path ".env" -Value $envContent.Trim() -Encoding UTF8 -NoNewline
+
+          $credPath = "firebase-credentials.json"
+          try {
+            [IO.File]::WriteAllBytes($credPath, [Convert]::FromBase64String($fb_creds_b64))
+          } catch {
+            Write-Error "Provided Firebase credentials secret is not valid base64 JSON"
+            exit 1
+          }
+
+          # Ensure non-secret required files exist for the .spec datas list.
+          if (-not (Test-Path "config.ini")) {
+            Set-Content -Path "config.ini" -Value "[DEFAULT]" -Encoding UTF8 -NoNewline
+          }
+          if (-not (Test-Path "symbol_mapper.json")) {
+            Set-Content -Path "symbol_mapper.json" -Value "{}" -Encoding UTF8 -NoNewline
+          }
+
           if (Test-Path QuantCopierAPI.spec) {
             pyinstaller QuantCopierAPI.spec
           } else {
