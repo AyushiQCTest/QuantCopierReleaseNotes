@@ -210,22 +210,62 @@ jobs:
           # Inno Setup will embed it properly in the final installer
           # Skipping direct PE modification to avoid file locking issues
 
-      - name: Copy sidecar into Tauri binaries folder
+      - name: Upload QuantCopierAPI.exe as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qcdemo-sidecar-v${{ steps.version.outputs.VERSION }}
+          path: ${{ steps.sidecar.outputs.SIDECAR_PATH }}
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Create venv and install API backend deps
+        shell: pwsh
+        working-directory: ${{ env.FRONTEND_PATH }}\Backend
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\Activate.ps1
+          python -m pip install --upgrade pip
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          if (Test-Path requirements-dev.txt) { pip install -r requirements-dev.txt }
+
+      - name: Build API sidecar executable (PyInstaller)
+        shell: pwsh
+        working-directory: ${{ env.FRONTEND_PATH }}\Backend
+        run: |
+          .\.venv\Scripts\Activate.ps1
+          if (Test-Path QuantCopierAPI.spec) {
+            pyinstaller QuantCopierAPI.spec
+          } else {
+            pyinstaller --onefile QuantCopierAPI.py
+          }
+
+      - name: Locate API sidecar binary
+        id: api_sidecar
+        shell: pwsh
+        working-directory: ${{ env.FRONTEND_PATH }}\Backend
+        run: |
+          $bin = Get-ChildItem -Path dist -Filter *.exe -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $bin) { Write-Error "API sidecar binary not found"; exit 1 }
+          echo "API_SIDECAR_PATH=$($bin.FullName)" >> $env:GITHUB_OUTPUT
+          echo "API_SIDECAR_NAME=$($bin.Name)" >> $env:GITHUB_OUTPUT
+          Write-Host "Found API sidecar: $($bin.FullName)"
+
+      - name: Upload API sidecar as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-sidecar-v${{ steps.version.outputs.VERSION }}
+          path: ${{ steps.api_sidecar.outputs.API_SIDECAR_PATH }}
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Copy API sidecar into Tauri binaries folder
         shell: pwsh
         run: |
           $targetDir = Join-Path "${{ env.FRONTEND_PATH }}" "src-tauri\binaries"
           if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir | Out-Null }
           $targetName = "QuantCopierAPI-x86_64-pc-windows-msvc.exe"
-          Copy-Item "${{ steps.sidecar.outputs.SIDECAR_PATH }}" (Join-Path $targetDir $targetName) -Force
-          Write-Host "Copied sidecar to $targetDir\$targetName"
-
-      - name: Upload QuantCopierAPI.exe as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: QuantCopierAPI-v${{ steps.version.outputs.VERSION }}
-          path: ${{ steps.sidecar.outputs.SIDECAR_PATH }}
-          retention-days: 90
-          if-no-files-found: warn
+          Copy-Item "${{ steps.api_sidecar.outputs.API_SIDECAR_PATH }}" (Join-Path $targetDir $targetName) -Force
+          Write-Host "Copied API sidecar to $targetDir\$targetName"
 
       # ------------------------------
       # Build Tauri app
@@ -291,6 +331,40 @@ jobs:
           echo "FINAL_INSTALLER_NAME=$($output.Name)" >> $env:GITHUB_OUTPUT
           Write-Host "Inno installer: $($output.FullName)"
 
+      - name: Generate releases.json for auto-update
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $bucket = "${{ env.FIREBASE_BUCKET }}"
+          $releaseTag = "v$version"
+          $releasesJsonPath = Join-Path $env:RUNNER_TEMP "releases.json"
+
+          $installerFile = "setup.exe"
+          $qcdemoFile = "QC-demo.exe"
+          $apiFile = "quant-copier-AP.exe"
+          $baseUrl = "https://storage.googleapis.com/$bucket/$releaseTag/"
+
+          $releaseData = @{
+            latest = $releaseTag
+            version = $version
+            url = $baseUrl
+            updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+            files = @{
+              mainInstaller = $installerFile
+              qcdemoSidecar = $qcdemoFile
+              apiSidecar = $apiFile
+            }
+            downloads = @{
+              mainInstaller = "$baseUrl$installerFile"
+              qcdemoSidecar = "$baseUrl$qcdemoFile"
+              apiSidecar = "$baseUrl$apiFile"
+            }
+          }
+
+          $releaseData | ConvertTo-Json -Depth 6 | Set-Content -Path $releasesJsonPath -Encoding UTF8 -NoNewline
+          echo "RELEASES_JSON_PATH=$releasesJsonPath" >> $env:GITHUB_ENV
+          Write-Host "Generated releases.json at $releasesJsonPath"
+
       # ------------------------------
       # Upload to Firebase Storage
       # ------------------------------
@@ -323,14 +397,59 @@ jobs:
         shell: pwsh
         working-directory: .
         run: |
-          $tag = if ("${{ github.event_name }}" -eq "release") { "${{ github.event.release.tag_name }}" } elseif ([string]::IsNullOrWhiteSpace("${{ github.event.inputs.release_tag }}")) { "manual-$(Get-Date -Format 'yyyyMMdd-HHmmss')" } else { "${{ github.event.inputs.release_tag }}" }
-          $dest = "installers/$tag/${{ steps.inno_run.outputs.FINAL_INSTALLER_NAME }}"
+          function Invoke-Upload {
+            param(
+              [string]$Source,
+              [string]$Destination
+            )
+            python scripts/upload_firebase.py --bucket "${{ env.FIREBASE_BUCKET }}" --file "$Source" --dest "$Destination" --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Upload failed for destination: $Destination"
+              exit 1
+            }
+          }
+
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $releaseTag = "v$version"
+          $installerName = "setup.exe"
+          $qcdemoName = "QC-demo.exe"
+          $apiName = "quant-copier-AP.exe"
+
+          $dest = "$releaseTag/$installerName"
           Write-Host "Uploading to bucket: ${{ env.FIREBASE_BUCKET }} at path: $dest"
-          python scripts/upload_firebase.py --bucket "${{ env.FIREBASE_BUCKET }}" --file "${{ steps.inno_run.outputs.FINAL_INSTALLER }}" --dest "$dest" --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
-          $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/installers%2F$tag%2F${{ steps.inno_run.outputs.FINAL_INSTALLER_NAME }}?alt=media"
+          Invoke-Upload -Source "${{ steps.inno_run.outputs.FINAL_INSTALLER }}" -Destination $dest
+
+          $sidecarDest = "$releaseTag/$qcdemoName"
+          Write-Host "Uploading sidecar to bucket: ${{ env.FIREBASE_BUCKET }} at path: $sidecarDest"
+          Invoke-Upload -Source "${{ steps.sidecar.outputs.SIDECAR_PATH }}" -Destination $sidecarDest
+
+          $apiSidecarDest = "$releaseTag/$apiName"
+          Write-Host "Uploading API sidecar to bucket: ${{ env.FIREBASE_BUCKET }} at path: $apiSidecarDest"
+          Invoke-Upload -Source "${{ steps.api_sidecar.outputs.API_SIDECAR_PATH }}" -Destination $apiSidecarDest
+
+          $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$installerName?alt=media"
+          $sidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$qcdemoName?alt=media"
+          $apiSidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$apiName?alt=media"
+          $releasesJsonUrl = "https://storage.googleapis.com/${{ env.FIREBASE_BUCKET }}/releases.json"
           echo "FIREBASE_URL=$url" >> $env:GITHUB_ENV
-          echo "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+          echo "SIDECAR_FIREBASE_URL=$sidecarUrl" >> $env:GITHUB_ENV
+          echo "API_SIDECAR_FIREBASE_URL=$apiSidecarUrl" >> $env:GITHUB_ENV
+          echo "RELEASES_JSON_URL=$releasesJsonUrl" >> $env:GITHUB_ENV
+          echo "RELEASE_TAG=$releaseTag" >> $env:GITHUB_ENV
           echo "upload_success=true" >> $env:GITHUB_OUTPUT
+
+      - name: Upload releases.json to Firebase root
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "$env:RELEASES_JSON_PATH")) {
+            Write-Error "releases.json was not generated"
+            exit 1
+          }
+          python scripts/upload_firebase.py --bucket "${{ env.FIREBASE_BUCKET }}" --file "$env:RELEASES_JSON_PATH" --dest "releases.json" --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to upload releases.json"
+            exit 1
+          }
 
       # ------------------------------
       # Upload artifact
@@ -364,7 +483,14 @@ jobs:
           @"
           ## ✅ Full Installer Pipeline Complete
           - Release tag: `${{ env.RELEASE_TAG }}`
-          - Installer: `${{ steps.inno_run.outputs.FINAL_INSTALLER_NAME }}`
-          - Firebase path: gs://${{ env.FIREBASE_BUCKET }}/installers/${{ env.RELEASE_TAG }}/${{ steps.inno_run.outputs.FINAL_INSTALLER_NAME }}
+          - Installer: `setup.exe`
+          - qcdemo Sidecar: `QC-demo.exe`
+          - API Sidecar: `quant-copier-AP.exe`
+          - Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/setup.exe
+          - qcdemo Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QC-demo.exe
+          - API Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/quant-copier-AP.exe
+          - releases.json: ${{ env.RELEASES_JSON_URL }}
           - Download URL: ${{ env.FIREBASE_URL }}
+          - Sidecar Download URL: ${{ env.SIDECAR_FIREBASE_URL }}
+          - API Sidecar Download URL: ${{ env.API_SIDECAR_FIREBASE_URL }}
           "@ >> $env:GITHUB_STEP_SUMMARY
