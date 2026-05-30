@@ -1,6 +1,6 @@
 # QuantCopier Release Notes Deployment Guide
 
-> **Current Version: 1.3.2**
+> **Current Version: 1.3.3**
 
 ## How to Release a New Version
 
@@ -12,7 +12,7 @@
 
 ### VERSION TO BUILD:
 ```
-1.3.2
+1.3.3
 ```
 **Edit the version above ↑ and commit to trigger release automation**
 
@@ -99,9 +99,9 @@ Edit `app/page.tsx`:
 // Find the releases array
 const releases: ReleaseNote[] = [
   {
-    version: '1.3.2',
-    date: 'January 20, 2025',
-    title: 'Your Feature Title',
+    version: '1.3.3',
+    date: 'May 30, 2026',
+    title: 'New Version v1.3.3',
     description: 'Description of what changed',
     features: ['Feature 1', 'Feature 2'],
     fixes: ['Fix 1'],
