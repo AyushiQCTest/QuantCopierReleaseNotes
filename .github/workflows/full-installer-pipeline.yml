@@ -193,6 +193,17 @@ jobs:
           echo "SIDECAR_NAME=$($bin.Name)" >> $env:GITHUB_OUTPUT
           Write-Host "Found sidecar: $($bin.FullName)"
 
+      - name: Normalize qcdemo sidecar filename
+        shell: pwsh
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: |
+          $src = "${{ steps.sidecar.outputs.SIDECAR_PATH }}"
+          $dest = Join-Path $env:RUNNER_TEMP "QuantCopierUI.exe"
+          Copy-Item -Path $src -Destination $dest -Force
+          echo "NORMALIZED_SIDECAR_PATH=$dest" >> $env:GITHUB_ENV
+          echo "NORMALIZED_SIDECAR_NAME=QuantCopierUI.exe" >> $env:GITHUB_ENV
+          Write-Host "Normalized sidecar: $dest"
+
       - name: Install Python pefile library for version embedding
         shell: pwsh
         run: |
@@ -214,7 +225,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: qcdemo-sidecar-v${{ steps.version.outputs.VERSION }}
-          path: ${{ steps.sidecar.outputs.SIDECAR_PATH }}
+          path: ${{ env.NORMALIZED_SIDECAR_PATH }}
           retention-days: 90
           if-no-files-found: warn
 
@@ -296,11 +307,22 @@ jobs:
           echo "API_SIDECAR_NAME=$($bin.Name)" >> $env:GITHUB_OUTPUT
           Write-Host "Found API sidecar: $($bin.FullName)"
 
+      - name: Normalize API sidecar filename
+        shell: pwsh
+        working-directory: ${{ env.FRONTEND_PATH }}\Backend
+        run: |
+          $src = "${{ steps.api_sidecar.outputs.API_SIDECAR_PATH }}"
+          $dest = Join-Path $env:RUNNER_TEMP "QuantCopierAPI.exe"
+          Copy-Item -Path $src -Destination $dest -Force
+          echo "NORMALIZED_API_SIDECAR_PATH=$dest" >> $env:GITHUB_ENV
+          echo "NORMALIZED_API_SIDECAR_NAME=QuantCopierAPI.exe" >> $env:GITHUB_ENV
+          Write-Host "Normalized API sidecar: $dest"
+
       - name: Upload API sidecar as artifact
         uses: actions/upload-artifact@v4
         with:
           name: api-sidecar-v${{ steps.version.outputs.VERSION }}
-          path: ${{ steps.api_sidecar.outputs.API_SIDECAR_PATH }}
+          path: ${{ env.NORMALIZED_API_SIDECAR_PATH }}
           retention-days: 90
           if-no-files-found: warn
 
@@ -376,6 +398,16 @@ jobs:
           echo "FINAL_INSTALLER=$($output.FullName)" >> $env:GITHUB_OUTPUT
           echo "FINAL_INSTALLER_NAME=$($output.Name)" >> $env:GITHUB_OUTPUT
           Write-Host "Inno installer: $($output.FullName)"
+
+      - name: Normalize installer filename
+        shell: pwsh
+        run: |
+          $src = "${{ steps.inno_run.outputs.FINAL_INSTALLER }}"
+          $dest = Join-Path $env:RUNNER_TEMP "QuantCopier.exe"
+          Copy-Item -Path $src -Destination $dest -Force
+          echo "NORMALIZED_INSTALLER_PATH=$dest" >> $env:GITHUB_ENV
+          echo "NORMALIZED_INSTALLER_NAME=QuantCopier.exe" >> $env:GITHUB_ENV
+          Write-Host "Normalized installer: $dest"
 
       - name: Generate releases.json for auto-update
         shell: pwsh
@@ -462,17 +494,21 @@ jobs:
           $qcdemoName = "QuantCopierUI.exe"
           $apiName = "QuantCopierAPI.exe"
 
+          $installerPath = "$env:NORMALIZED_INSTALLER_PATH"
+          $sidecarPath = "$env:NORMALIZED_SIDECAR_PATH"
+          $apiPath = "$env:NORMALIZED_API_SIDECAR_PATH"
+
           $dest = "$releaseTag/$installerName"
           Write-Host "Uploading to bucket: ${{ env.FIREBASE_BUCKET }} at path: $dest"
-          Invoke-Upload -Source "${{ steps.inno_run.outputs.FINAL_INSTALLER }}" -Destination $dest
+          Invoke-Upload -Source "$installerPath" -Destination $dest
 
           $sidecarDest = "$releaseTag/$qcdemoName"
           Write-Host "Uploading sidecar to bucket: ${{ env.FIREBASE_BUCKET }} at path: $sidecarDest"
-          Invoke-Upload -Source "${{ steps.sidecar.outputs.SIDECAR_PATH }}" -Destination $sidecarDest
+          Invoke-Upload -Source "$sidecarPath" -Destination $sidecarDest
 
           $apiSidecarDest = "$releaseTag/$apiName"
           Write-Host "Uploading API sidecar to bucket: ${{ env.FIREBASE_BUCKET }} at path: $apiSidecarDest"
-          Invoke-Upload -Source "${{ steps.api_sidecar.outputs.API_SIDECAR_PATH }}" -Destination $apiSidecarDest
+          Invoke-Upload -Source "$apiPath" -Destination $apiSidecarDest
 
           $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$installerName?alt=media"
           $sidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$qcdemoName?alt=media"
@@ -505,7 +541,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer-${{ env.RELEASE_TAG || github.event.release.tag_name }}
-          path: ${{ steps.inno_run.outputs.FINAL_INSTALLER }}
+          path: ${{ env.NORMALIZED_INSTALLER_PATH }}
           if-no-files-found: error
           retention-days: 90
 

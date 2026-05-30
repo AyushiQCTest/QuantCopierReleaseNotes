@@ -159,7 +159,7 @@ https://firebasestorage.googleapis.com/v0/b/<bucket>/o/installers%2F<tag>%2F<fil
 
 Example:
 ```
-https://firebasestorage.googleapis.com/v0/b/quantcopierreleasenotes.appspot.com/o/installers%2Fv1.0.0%2FQuantCopier-Setup.exe?alt=media
+https://firebasestorage.googleapis.com/v0/b/quantcopierreleasenotes.appspot.com/o/installers%2Fv1.0.0%2FQuantCopier.exe?alt=media
 ```
 
 ### For Developers (GitHub Artifact):
@@ -254,10 +254,10 @@ https://firebasestorage.googleapis.com/v0/b/quantcopierreleasenotes.appspot.com/
 
 ```
 src-tauri/target/release/bundle/
-  ├── nsis/
-  │   └── QuantCopier_1.0.0_x64-setup.exe    ← Uploaded to Firebase
-  └── msi/
-      └── QuantCopier_1.0.0_x64_en-US.msi
+   ├── nsis/
+   │   └── QuantCopier.exe    ← Uploaded to Firebase
+   └── msi/
+         └── QuantCopier_1.0.0_x64_en-US.msi
 ```
 
 **Upload destination:**
@@ -277,8 +277,8 @@ After successful workflow:
 ================================================
 
 Release Tag:      v1.0.0
-Installer:        QuantCopier_1.0.0_x64-setup.exe
-Firebase Path:    gs://quantcopierreleasenotes.appspot.com/installers/v1.0.0/QuantCopier_1.0.0_x64-setup.exe
+   Installer:        QuantCopier.exe
+   Firebase Path:    gs://quantcopierreleasenotes.appspot.com/installers/v1.0.0/QuantCopier.exe
 Download URL:     https://firebasestorage.googleapis.com/...
 
 ================================================
