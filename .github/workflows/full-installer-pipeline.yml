@@ -385,9 +385,10 @@ jobs:
           $releaseTag = "v$version"
           $releasesJsonPath = Join-Path $env:RUNNER_TEMP "releases.json"
 
-          $installerFile = "setup.exe"
-          $qcdemoFile = "QC-demo.exe"
-          $apiFile = "quant-copier-AP.exe"
+          # Use canonical artifact filenames
+          $installerFile = "QuantCopier.exe"
+          $qcdemoFile = "QuantCopierUI.exe"
+          $apiFile = "QuantCopierAPI.exe"
           $baseUrl = "https://storage.googleapis.com/$bucket/$releaseTag/"
 
           $releaseData = @{
@@ -457,9 +458,9 @@ jobs:
 
           $version = "${{ steps.version.outputs.VERSION }}"
           $releaseTag = "v$version"
-          $installerName = "setup.exe"
-          $qcdemoName = "QC-demo.exe"
-          $apiName = "quant-copier-AP.exe"
+          $installerName = "QuantCopier.exe"
+          $qcdemoName = "QuantCopierUI.exe"
+          $apiName = "QuantCopierAPI.exe"
 
           $dest = "$releaseTag/$installerName"
           Write-Host "Uploading to bucket: ${{ env.FIREBASE_BUCKET }} at path: $dest"
@@ -491,7 +492,7 @@ jobs:
             Write-Error "releases.json was not generated"
             exit 1
           }
-          python scripts/upload_firebase.py --bucket "${{ env.FIREBASE_BUCKET }}" --file "$env:RELEASES_JSON_PATH" --dest "releases.json" --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
+          python scripts/upload_firebase.py --bucket "${{ env.FIREBASE_BUCKET }}" --file "$env:RELEASES_JSON_PATH" --dest "releases.json" --cache-control "no-cache, max-age=0" --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Failed to upload releases.json"
             exit 1
@@ -529,12 +530,12 @@ jobs:
           @"
           ## ✅ Full Installer Pipeline Complete
           - Release tag: `${{ env.RELEASE_TAG }}`
-          - Installer: `setup.exe`
-          - qcdemo Sidecar: `QC-demo.exe`
-          - API Sidecar: `quant-copier-AP.exe`
-          - Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/setup.exe
-          - qcdemo Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QC-demo.exe
-          - API Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/quant-copier-AP.exe
+          - Installer: `QuantCopier.exe`
+          - qcdemo Sidecar: `QuantCopierUI.exe`
+          - API Sidecar: `QuantCopierAPI.exe`
+          - Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopier.exe
+          - qcdemo Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierUI.exe
+          - API Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierAPI.exe
           - releases.json: ${{ env.RELEASES_JSON_URL }}
           - Download URL: ${{ env.FIREBASE_URL }}
           - Sidecar Download URL: ${{ env.SIDECAR_FIREBASE_URL }}

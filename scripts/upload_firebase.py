@@ -16,6 +16,7 @@ def upload_file_to_storage(
     destination_blob: str,
     credentials_path: Path,
     make_public: bool = True,
+    cache_control: str | None = None,
 ) -> str:
     """Upload a file to Firebase Storage (GCS)
     
@@ -41,7 +42,15 @@ def upload_file_to_storage(
     blob = bucket.blob(destination_blob)
     
     print(f"Uploading {source_file.name} ({source_file.stat().st_size / (1024*1024):.2f} MB)...")
+    if cache_control:
+        blob.cache_control = cache_control
     blob.upload_from_filename(str(source_file))
+    if cache_control:
+        try:
+            blob.patch()
+        except Exception:
+            # Non-fatal: patch may fail if permissions restrict metadata changes
+            print(f"[WARNING] Could not set Cache-Control metadata on {destination_blob}")
     
     if make_public:
         try:
@@ -85,6 +94,11 @@ def main() -> int:
         help="Path to Firebase service account JSON key",
     )
     parser.add_argument(
+        "--cache-control",
+        required=False,
+        help="Optional Cache-Control header value to set on the uploaded object",
+    )
+    parser.add_argument(
         "--private",
         action="store_true",
         help="Keep file private (default: make public)",
@@ -99,6 +113,7 @@ def main() -> int:
             destination_blob=args.dest,
             credentials_path=Path(args.credentials),
             make_public=not args.private,
+            cache_control=args.cache_control,
         )
         return 0
     except FileNotFoundError as e:
