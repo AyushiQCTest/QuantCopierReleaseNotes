@@ -31,12 +31,17 @@ jobs:
         shell: bash
         run: |
           # Read DEPLOYMENT.md and extract version
-          # Look for version pattern in the file
-          VERSION=$(grep -oP '(?<=version["\s=:]+)[0-9]+\.[0-9]+\.[0-9]+' md_docs/DEPLOYMENT.md | head -1)
+          # Try to extract from "Current Version:" line first (fixed-length lookbehind)
+          VERSION=$(grep -oP 'Current Version: \K[0-9]+\.[0-9]+\.[0-9]+' md_docs/DEPLOYMENT.md | head -1)
           
-          # If not found with above pattern, try common patterns
+          # If not found, try the VERSION TO BUILD section
           if [ -z "$VERSION" ]; then
-            VERSION=$(grep -oP '\d+\.\d+\.\d+' md_docs/DEPLOYMENT.md | head -1)
+            VERSION=$(sed -n '/VERSION TO BUILD:/,/```/p' md_docs/DEPLOYMENT.md | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          fi
+          
+          # If still not found, try any version pattern
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep -oP '[0-9]+\.[0-9]+\.[0-9]+' md_docs/DEPLOYMENT.md | head -1)
           fi
           
           if [ -z "$VERSION" ]; then
