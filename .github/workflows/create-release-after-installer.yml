@@ -1,6 +1,7 @@
 name: Create Release After Installer Build
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows:
       - "Full Windows Installer Pipeline"
@@ -30,22 +31,24 @@ jobs:
         id: version
         shell: bash
         run: |
-          # Read DEPLOYMENT.md and extract version
-          # Try to extract from "Current Version:" line first
-          VERSION=$(grep 'Current Version:' md_docs/DEPLOYMENT.md | head -1 | sed 's/.*Current Version: \([0-9.]*\).*/\1/' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$')
+          FILE="md_docs/DEPLOYMENT.md"
+          
+          # Try "Current Version: X.Y.Z" line first
+          VERSION=$(grep 'Current Version:' "$FILE" | head -1 | awk '{print $NF}')
           
           # If not found, try the VERSION TO BUILD section
           if [ -z "$VERSION" ]; then
-            VERSION=$(sed -n '/VERSION TO BUILD:/,/```/p' md_docs/DEPLOYMENT.md | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+            VERSION=$(awk '/VERSION TO BUILD:/,/```/ {if ($0 ~ /^[0-9]+\.[0-9]+\.[0-9]+$/) {print; exit}}' "$FILE")
           fi
           
-          # If still not found, try any version pattern
+          # If still not found, extract any version pattern
           if [ -z "$VERSION" ]; then
-            VERSION=$(grep -E '[0-9]+\.[0-9]+\.[0-9]+' md_docs/DEPLOYMENT.md | sed 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/' | head -1)
+            VERSION=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' "$FILE" | head -1)
           fi
           
-          if [ -z "$VERSION" ]; then
-            echo "❌ Could not extract version from DEPLOYMENT.md"
+          # Validate version format
+          if ! echo "$VERSION" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' >/dev/null; then
+            echo "❌ Could not extract valid version from DEPLOYMENT.md"
             exit 1
           fi
           
