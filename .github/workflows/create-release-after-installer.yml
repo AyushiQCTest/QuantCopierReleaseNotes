@@ -32,26 +32,31 @@ jobs:
         shell: bash
         run: |
           FILE="md_docs/DEPLOYMENT.md"
-          
-          # Try "Current Version: X.Y.Z" line first
-          VERSION=$(grep 'Current Version:' "$FILE" | head -1 | awk '{print $NF}')
-          
-          # If not found, try the VERSION TO BUILD section
+
+          # Try "Current Version: X.Y.Z" - using \K to reset match start (no lookbehind needed)
+          VERSION=$(grep -oP 'Current Version:\s*\K[0-9]+\.[0-9]+\.[0-9]+' "$FILE" | head -1)
+
+          # Try VERSION TO BUILD section
           if [ -z "$VERSION" ]; then
-            VERSION=$(awk '/VERSION TO BUILD:/,/```/ {if ($0 ~ /^[0-9]+\.[0-9]+\.[0-9]+$/) {print; exit}}' "$FILE")
+            VERSION=$(awk '/VERSION TO BUILD:/,/```/' "$FILE" | grep -oP '^\d+\.\d+\.\d+$' | head -1)
           fi
-          
-          # If still not found, extract any version pattern
+
+          # Fallback: first version-like pattern anywhere
           if [ -z "$VERSION" ]; then
-            VERSION=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' "$FILE" | head -1)
+            VERSION=$(grep -oP '\d+\.\d+\.\d+' "$FILE" | head -1)
           fi
-          
-          # Validate version format
-          if ! echo "$VERSION" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' >/dev/null; then
-            echo "❌ Could not extract valid version from DEPLOYMENT.md"
+
+          if [ -z "$VERSION" ]; then
+            echo "❌ Could not extract version from DEPLOYMENT.md"
             exit 1
           fi
-          
+
+          # Validate format
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "❌ Extracted value '$VERSION' is not a valid version"
+            exit 1
+          fi
+
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
           echo "✅ Extracted version: $VERSION"
