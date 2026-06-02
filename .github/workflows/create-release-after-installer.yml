@@ -89,11 +89,14 @@ jobs:
         if: steps.check-release.outputs.exists == 'false'
         shell: bash
         working-directory: quantcopier-ui
+        env:
+          CUSTOM_PAT: ${{ secrets.GH_PAT }}
         run: |
           TAG="${{ steps.version.outputs.TAG }}"
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git tag "$TAG" -m "Release $TAG - Automated from installer build"
+          git remote set-url origin "https://x-access-token:${CUSTOM_PAT}@github.com/AyushiQCTest/QuantCopierUI.git"
           git push origin "$TAG"
           echo "✅ Created and pushed tag: $TAG"
 
