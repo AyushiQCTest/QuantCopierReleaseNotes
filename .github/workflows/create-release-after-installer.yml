@@ -69,7 +69,7 @@ jobs:
           repository: AyushiQCTest/QuantCopierUI
           path: quantcopier-ui
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
 
       - name: Check if release already exists
         id: check-release
@@ -136,7 +136,7 @@ jobs:
           
           # Check if qcdemo repo is already cloned
           if [ ! -d "qcdemo" ]; then
-            git clone https://github.com/AyushiQCTest/qcdemo.git qcdemo
+            git clone https://${{ secrets.GH_PAT }}@github.com/AyushiQCTest/qcdemo.git qcdemo
           fi
           
           cd qcdemo
