@@ -52,15 +52,6 @@ jobs:
           fetch-depth: 1
           token: ${{ secrets.FRONTEND_REPO_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Checkout backend sidecar repo
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.BACKEND_REPO }}
-          ref: ${{ env.BACKEND_REF }}
-          path: ${{ env.BACKEND_PATH }}
-          fetch-depth: 1
-          token: ${{ secrets.BACKEND_REPO_TOKEN || secrets.GITHUB_TOKEN }}
-
       # Extract version and apply to PyInstaller & Inno Setup
       - name: Extract and apply version
         id: version
@@ -156,78 +147,6 @@ jobs:
           if (-not (Test-Path $iscc)) { Write-Error "ISCC.exe not found"; exit 1 }
           echo "ISCC_PATH=$iscc" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      # ------------------------------
-      # Build backend sidecar with PyInstaller
-      # ------------------------------
-      - name: Create venv and install backend deps
-        shell: pwsh
-        working-directory: ${{ env.BACKEND_PATH }}
-        run: |
-          python -m venv .venv
-          .\.venv\Scripts\Activate.ps1
-          python -m pip install --upgrade pip
-          if (Test-Path requirements.txt) { pip install -r requirements.txt }
-          if (Test-Path requirements-dev.txt) { pip install -r requirements-dev.txt }
-
-      - name: Build sidecar executable (PyInstaller)
-        shell: pwsh
-        working-directory: ${{ env.BACKEND_PATH }}
-        run: |
-          .\.venv\Scripts\Activate.ps1
-          if (Test-Path QuantCopierTelegram.spec) {
-            pyinstaller QuantCopierTelegram.spec
-          } elseif (Test-Path QuantCopierAPI.spec) {
-            pyinstaller QuantCopierAPI.spec
-          } else {
-            pyinstaller --onefile QuantCopierTelegram.py
-          }
-
-      - name: Locate sidecar binary
-        id: sidecar
-        shell: pwsh
-        working-directory: ${{ env.BACKEND_PATH }}
-        run: |
-          $bin = Get-ChildItem -Path dist -Filter *.exe -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if (-not $bin) { Write-Error "Sidecar binary not found"; exit 1 }
-          echo "SIDECAR_PATH=$($bin.FullName)" >> $env:GITHUB_OUTPUT
-          echo "SIDECAR_NAME=$($bin.Name)" >> $env:GITHUB_OUTPUT
-          Write-Host "Found sidecar: $($bin.FullName)"
-
-      - name: Normalize qcdemo sidecar filename
-        shell: pwsh
-        working-directory: ${{ env.BACKEND_PATH }}
-        run: |
-          $src = "${{ steps.sidecar.outputs.SIDECAR_PATH }}"
-          $dest = Join-Path $env:RUNNER_TEMP "QuantCopierUI.exe"
-          Copy-Item -Path $src -Destination $dest -Force
-          echo "NORMALIZED_SIDECAR_PATH=$dest" >> $env:GITHUB_ENV
-          echo "NORMALIZED_SIDECAR_NAME=QuantCopierUI.exe" >> $env:GITHUB_ENV
-          Write-Host "Normalized sidecar: $dest"
-
-      - name: Install Python pefile library for version embedding
-        shell: pwsh
-        run: |
-          python -m pip install pefile --quiet
-          Write-Host "✓ pefile library installed"
-
-      - name: Embed version metadata in EXE (Windows Properties)
-        shell: pwsh
-        run: |
-          $exePath = "${{ steps.sidecar.outputs.SIDECAR_PATH }}"
-          $version = "${{ steps.version.outputs.VERSION }}"
-          Write-Host "Version metadata: $version (embedded in PyInstaller spec)"
-          Write-Host "Note: Final version will be visible in installer properties"
-          # Version is already in the PyInstaller spec file
-          # Inno Setup will embed it properly in the final installer
-          # Skipping direct PE modification to avoid file locking issues
-
-      - name: Upload QuantCopierAPI.exe as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: qcdemo-sidecar-v${{ steps.version.outputs.VERSION }}
-          path: ${{ env.NORMALIZED_SIDECAR_PATH }}
-          retention-days: 90
-          if-no-files-found: warn
 
       - name: Create venv and install API backend deps
         shell: pwsh
@@ -348,6 +267,27 @@ jobs:
         working-directory: ${{ env.FRONTEND_PATH }}
         run: npm run tauri build
 
+      - name: Locate and copy raw Tauri UI executable
+        shell: pwsh
+        run: |
+          $src = "${{ env.FRONTEND_PATH }}\src-tauri\target\release\QuantCopierTelegramUI.exe"
+          if (-not (Test-Path $src)) {
+            $src = "${{ env.FRONTEND_PATH }}\src-tauri\target\release\QuantCopierMT5.exe"
+          }
+          if (-not (Test-Path $src)) {
+            $src = Get-ChildItem -Path "${{ env.FRONTEND_PATH }}\src-tauri\target\release" -Filter *.exe -Recurse | 
+                   Where-Object { $_.Name -like "*QuantCopier*" -and $_.Name -notlike "*API*" } | 
+                   Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          }
+          if (-not $src -or -not (Test-Path $src)) { Write-Error "Tauri raw executable not found"; exit 1 }
+          $dest = Join-Path $env:RUNNER_TEMP "QuantCopierTelegramUI.exe"
+          Copy-Item -Path $src -Destination $dest -Force
+          echo "RAW_UI_PATH=$dest" >> $env:GITHUB_ENV
+          echo "RAW_UI_NAME=QuantCopierTelegramUI.exe" >> $env:GITHUB_ENV
+          Write-Host "Raw UI executable copied to: $dest"
+
+
+
       - name: Find Tauri installer
         id: tauri_installer
         shell: pwsh
@@ -418,8 +358,7 @@ jobs:
           $releasesJsonPath = Join-Path $env:RUNNER_TEMP "releases.json"
 
           # Use canonical artifact filenames
-          $installerFile = "QuantCopier.exe"
-          $qcdemoFile = "QuantCopierUI.exe"
+          $installerFile = "QuantCopierTelegramUI.exe"
           $apiFile = "QuantCopierAPI.exe"
           $baseUrl = "https://storage.googleapis.com/$bucket/$releaseTag/"
 
@@ -430,12 +369,10 @@ jobs:
             updatedAt = (Get-Date).ToUniversalTime().ToString("o")
             files = @{
               mainInstaller = $installerFile
-              qcdemoSidecar = $qcdemoFile
               apiSidecar = $apiFile
             }
             downloads = @{
               mainInstaller = "$baseUrl$installerFile"
-              qcdemoSidecar = "$baseUrl$qcdemoFile"
               apiSidecar = "$baseUrl$apiFile"
             }
           }
@@ -490,32 +427,40 @@ jobs:
 
           $version = "${{ steps.version.outputs.VERSION }}"
           $releaseTag = "v$version"
-          $installerName = "QuantCopier.exe"
-          $qcdemoName = "QuantCopierUI.exe"
-          $apiName = "QuantCopierAPI.exe"
+          
+          # Public installer
+          $publicInstallerName = "QuantCopier.exe"
+          $publicInstallerPath = "$env:NORMALIZED_INSTALLER_PATH"
 
-          $installerPath = "$env:NORMALIZED_INSTALLER_PATH"
-          $sidecarPath = "$env:NORMALIZED_SIDECAR_PATH"
+          # Auto-update artifacts
+          $uiName = "QuantCopierTelegramUI.exe"
+          $uiPath = "$env:RAW_UI_PATH"
+
+          $apiName = "QuantCopierAPI.exe"
           $apiPath = "$env:NORMALIZED_API_SIDECAR_PATH"
 
-          $dest = "$releaseTag/$installerName"
-          Write-Host "Uploading to bucket: ${{ env.FIREBASE_BUCKET }} at path: $dest"
-          Invoke-Upload -Source "$installerPath" -Destination $dest
+          # 1. Upload public installer (QuantCopier.exe)
+          $dest = "$releaseTag/$publicInstallerName"
+          Write-Host "Uploading public installer to GCS: $dest"
+          Invoke-Upload -Source "$publicInstallerPath" -Destination $dest
 
-          $sidecarDest = "$releaseTag/$qcdemoName"
-          Write-Host "Uploading sidecar to bucket: ${{ env.FIREBASE_BUCKET }} at path: $sidecarDest"
-          Invoke-Upload -Source "$sidecarPath" -Destination $sidecarDest
+          # 2. Upload raw UI executable (QuantCopierTelegramUI.exe)
+          $uiDest = "$releaseTag/$uiName"
+          Write-Host "Uploading raw UI executable to GCS: $uiDest"
+          Invoke-Upload -Source "$uiPath" -Destination $uiDest
 
+          # 3. Upload API sidecar executable (QuantCopierAPI.exe)
           $apiSidecarDest = "$releaseTag/$apiName"
-          Write-Host "Uploading API sidecar to bucket: ${{ env.FIREBASE_BUCKET }} at path: $apiSidecarDest"
+          Write-Host "Uploading API sidecar to GCS: $apiSidecarDest"
           Invoke-Upload -Source "$apiPath" -Destination $apiSidecarDest
 
-          $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$installerName?alt=media"
-          $sidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$qcdemoName?alt=media"
+          $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$publicInstallerName?alt=media"
+          $uiUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$uiName?alt=media"
           $apiSidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$apiName?alt=media"
           $releasesJsonUrl = "https://storage.googleapis.com/${{ env.FIREBASE_BUCKET }}/releases.json"
+
           echo "FIREBASE_URL=$url" >> $env:GITHUB_ENV
-          echo "SIDECAR_FIREBASE_URL=$sidecarUrl" >> $env:GITHUB_ENV
+          echo "UI_FIREBASE_URL=$uiUrl" >> $env:GITHUB_ENV
           echo "API_SIDECAR_FIREBASE_URL=$apiSidecarUrl" >> $env:GITHUB_ENV
           echo "RELEASES_JSON_URL=$releasesJsonUrl" >> $env:GITHUB_ENV
           echo "RELEASE_TAG=$releaseTag" >> $env:GITHUB_ENV
@@ -567,13 +512,13 @@ jobs:
           ## ✅ Full Installer Pipeline Complete
           - Release tag: `${{ env.RELEASE_TAG }}`
           - Installer: `QuantCopier.exe`
-          - qcdemo Sidecar: `QuantCopierUI.exe`
+          - Raw UI App: `QuantCopierTelegramUI.exe`
           - API Sidecar: `QuantCopierAPI.exe`
-          - Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopier.exe
-          - qcdemo Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierUI.exe
+          - Firebase Installer path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopier.exe
+          - Firebase Raw UI path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierTelegramUI.exe
           - API Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierAPI.exe
           - releases.json: ${{ env.RELEASES_JSON_URL }}
-          - Download URL: ${{ env.FIREBASE_URL }}
-          - Sidecar Download URL: ${{ env.SIDECAR_FIREBASE_URL }}
+          - Download Installer URL: ${{ env.FIREBASE_URL }}
+          - Raw UI Download URL: ${{ env.UI_FIREBASE_URL }}
           - API Sidecar Download URL: ${{ env.API_SIDECAR_FIREBASE_URL }}
           "@ >> $env:GITHUB_STEP_SUMMARY
