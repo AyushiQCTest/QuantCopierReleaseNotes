@@ -37,7 +37,7 @@ env:
   NODE_VERSION: "20"
   RUST_TOOLCHAIN: "stable"
   FRONTEND_REPO: ${{ github.event.inputs.frontend_repo || vars.FRONTEND_REPO || 'QuantTraderTools/QuantCopierTelegramUI' }}
-  FRONTEND_REF: ${{ github.event.inputs.frontend_ref || vars.FRONTEND_REF || 'main' }}
+  FRONTEND_REF: ${{ github.event.inputs.frontend_ref || vars.FRONTEND_REF || 'discord' }}
   FRONTEND_PATH: "frontend"
   BACKEND_REPO: ${{ github.event.inputs.backend_repo || vars.BACKEND_REPO || 'QuantTraderTools/qcdemo' }}
   BACKEND_REF: ${{ github.event.inputs.backend_ref || vars.BACKEND_REF || 'main' }}
@@ -453,11 +453,11 @@ jobs:
         run: |
           Write-Host "Uploading installer to Firebase Storage..."
           
-          $bucket = "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
+          $bucket = "${{ secrets.FIREBASE_STORAGE_BUCKET_DISCORD }}"
           $projectId = "${{ secrets.FIREBASE_PROJECT_ID }}"
           
           if (-not $bucket) {
-            Write-Error "ERROR: FIREBASE_STORAGE_BUCKET secret is not set"
+            Write-Error "ERROR: FIREBASE_STORAGE_BUCKET_DISCORD secret is not set"
             exit 1
           }
           

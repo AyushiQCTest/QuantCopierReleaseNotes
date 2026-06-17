@@ -11,7 +11,7 @@ export const siteConfig = {
   
   // Branding
   branding: {
-    projectName: 'QuantCopier Telegram',
+    projectName: 'QuantCopier Discord',
     tagline: 'Professional Trading Signal Copier',
     logo: null, // Optional: URL to logo
     primaryColor: '#0066ff',

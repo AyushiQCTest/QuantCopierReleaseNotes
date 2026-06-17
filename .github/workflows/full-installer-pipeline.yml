@@ -22,12 +22,12 @@ env:
   RUST_TOOLCHAIN: "stable"
   PYTHON_VERSION: "3.x"
   FRONTEND_REPO: ${{ vars.FRONTEND_REPO || 'AyushiQCTest/QuantCopierUI' }}
-  FRONTEND_REF: ${{ vars.FRONTEND_REF || 'main' }}
+  FRONTEND_REF: ${{ vars.FRONTEND_REF || 'discord' }}
   FRONTEND_PATH: "frontend"
   BACKEND_REPO: ${{ vars.BACKEND_REPO || 'AyushiQCTest/qcdemo' }}
   BACKEND_REF: ${{ vars.BACKEND_REF || 'main' }}
   BACKEND_PATH: "backend"
-  FIREBASE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+  FIREBASE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET_DISCORD }}
 
 jobs:
   build-full-installer:
