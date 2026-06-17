@@ -23,12 +23,12 @@ interface ReleasesData {
 
 export function ReleaseNotesClient() {
   const [mounted, setMounted] = useState(false);
-  
+
   // Get theme only after mount to avoid hydration mismatch
   const themeContext = mounted ? useTheme() : null;
   const theme = themeContext?.theme || 'light';
-  const toggleTheme = themeContext?.toggleTheme || (() => {});
-  
+  const toggleTheme = themeContext?.toggleTheme || (() => { });
+
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export function ReleaseNotesClient() {
       try {
         setLoading(true);
         const response = await fetch('/releases.json');
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch releases: ${response.statusText}`);
         }
@@ -80,7 +80,7 @@ export function ReleaseNotesClient() {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50"
       style={{ display: 'grid', gridTemplateColumns: '1fr 280px' }}
     >
@@ -89,37 +89,55 @@ export function ReleaseNotesClient() {
         <div className="max-w-4xl">
           {/* Top Bar with Back Button and Theme Toggle */}
           <div className="flex justify-between items-center mb-12">
-            <button
-              onClick={() => window.close()}
-              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 text-sm font-medium px-3 py-2 rounded-lg hover:bg-white/50 dark:hover:bg-slate-800/50"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>Back to App</span>
-            </button>
-            
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
-              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-gray-700" />
-              ) : (
-                <Sun className="w-5 h-5 text-yellow-400" />
-              )}
-            </button>
+            <div className="flex items-center gap-3">
+              <img src="/qtt-logo.svg" alt="QTT Logo" className="w-8 h-8" />
+              <h2 className="text-lg font-mokoto text-gray-900 dark:text-white">Quant Trader Tools</h2>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => window.close()}
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 text-sm font-medium px-3 py-2 rounded-lg hover:bg-white/50 dark:hover:bg-slate-800/50"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="hidden sm:inline">Back to App</span>
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? (
+                  <Moon className="w-5 h-5 text-gray-700" />
+                ) : (
+                  <Sun className="w-5 h-5 text-yellow-400" />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Header */}
           <header className="mb-16">
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-7xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
-                  Release Notes
-                </h1>
-                <p className="text-3xl font-bold text-gray-800 dark:text-white">QuantCopier</p>
+            <div className="space-y-6">
+              <div className="flex flex-col">
+                <div className="flex flex-col items-start animate-fade-in">
+                  <h1 className="text-7xl md:text-8xl font-black bg-gradient-to-r from-slate-800 to-blue-600 dark:from-white dark:to-blue-400 bg-clip-text text-transparent mb-4 tracking-tight">
+                    Release Notes
+                  </h1>
+                  
+                  <p className="text-5xl md:text-6xl font-black tracking-tight mb-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
+                    <span className="text-[#0f172a] dark:text-white">Quant</span><span className="text-[#0ea5e9]">Copier</span>
+                  </p>
+                  
+                  <div className="flex items-center gap-2 ml-1 animate-fade-in" style={{ animationDelay: '200ms' }}>
+                    <img src="/telegram-light.svg" alt="Telegram" className="w-5 h-5 dark:hidden block" />
+                    <img src="/telegram-dark.svg" alt="Telegram" className="w-5 h-5 hidden dark:block" />
+                    <span className="text-xl font-light tracking-wide text-gray-600 dark:text-gray-400">Telegram</span>
+                  </div>
+                </div>
               </div>
               <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">Stay updated with the latest features, fixes, and improvements to your trading signal copier</p>
             </div>
@@ -157,9 +175,9 @@ export function ReleaseNotesClient() {
           <footer className="mt-20 pt-12 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
             <p className="font-medium mb-4">Follow us on GitHub for the latest updates</p>
             <p>
-              <a 
-                href="https://github.com/quanttradertools/QuantCopierUI" 
-                target="_blank" 
+              <a
+                href="https://github.com/quanttradertools/QuantCopierUI"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium inline-flex items-center gap-2"
               >
@@ -197,37 +215,55 @@ export function ReleaseNotesClient() {
         <div className="max-w-3xl mx-auto">
           {/* Top Bar with Back Button and Theme Toggle */}
           <div className="flex justify-between items-center mb-8">
-            <button
-              onClick={() => window.close()}
-              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>Back to App</span>
-            </button>
-            
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
-              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-gray-700" />
-              ) : (
-                <Sun className="w-5 h-5 text-yellow-400" />
-              )}
-            </button>
+            <div className="flex items-center gap-3">
+              <img src="/qtt-logo.svg" alt="QTT Logo" className="w-8 h-8" />
+              <h2 className="text-lg font-mokoto text-gray-900 dark:text-white">Quant Trader Tools</h2>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => window.close()}
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm font-medium"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="hidden sm:inline">Back to App</span>
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? (
+                  <Moon className="w-5 h-5 text-gray-700" />
+                ) : (
+                  <Sun className="w-5 h-5 text-yellow-400" />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Header */}
           <header className="mb-16">
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-7xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
-                  Release Notes
-                </h1>
-                <p className="text-3xl font-bold text-gray-800 dark:text-white">QuantCopier</p>
+            <div className="space-y-6">
+              <div className="flex flex-col">
+                <div className="flex flex-col items-start animate-fade-in">
+                  <h1 className="text-7xl md:text-8xl font-black bg-gradient-to-r from-slate-800 to-blue-600 dark:from-white dark:to-blue-400 bg-clip-text text-transparent mb-4 tracking-tight">
+                    Release Notes
+                  </h1>
+                  
+                  <p className="text-5xl md:text-6xl font-black tracking-tight mb-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
+                    <span className="text-[#0f172a] dark:text-white">Quant</span><span className="text-[#0ea5e9]">Copier</span>
+                  </p>
+                  
+                  <div className="flex items-center gap-2 ml-1 animate-fade-in" style={{ animationDelay: '200ms' }}>
+                    <img src="/telegram-light.svg" alt="Telegram" className="w-5 h-5 dark:hidden block" />
+                    <img src="/telegram-dark.svg" alt="Telegram" className="w-5 h-5 hidden dark:block" />
+                    <span className="text-xl font-light tracking-wide text-gray-600 dark:text-gray-400">Telegram</span>
+                  </div>
+                </div>
               </div>
               <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">Stay updated with the latest features, fixes, and improvements to your trading signal copier</p>
             </div>
@@ -265,9 +301,9 @@ export function ReleaseNotesClient() {
           <footer className="mt-20 pt-12 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
             <p className="font-medium mb-4">Follow us on GitHub for the latest updates</p>
             <p>
-              <a 
-                href="https://github.com/quanttradertools/QuantCopierUI" 
-                target="_blank" 
+              <a
+                href="https://github.com/quanttradertools/QuantCopierUI"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium inline-flex items-center gap-2"
               >
