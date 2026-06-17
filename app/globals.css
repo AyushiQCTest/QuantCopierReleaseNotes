@@ -71,3 +71,19 @@ html.dark button:focus-visible,
 html.dark a:focus-visible {
   outline-color: #60a5fa;
 }
+
+.font-mokoto {
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    box-sizing: border-box;
+    border: 0 solid #e5e7eb;
+    font-weight: inherit;
+    margin: 0;
+    font-family: Mokoto,sans-serif;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}

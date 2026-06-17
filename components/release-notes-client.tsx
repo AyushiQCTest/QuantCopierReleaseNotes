@@ -86,13 +86,22 @@ export function ReleaseNotesClient() {
         {/* Main Content */}
         <div className="flex-1 px-6 py-10 lg:px-12 lg:py-12 overflow-y-auto relative">
           
-          {/* Top Right Actions */}
-          <div className="absolute top-6 right-6 lg:top-12 lg:right-12 z-20">
-            {siteConfig.theme.enableToggle && <ThemeToggle />}
+        {/* Top Navigation Bar */}
+        <div className="flex justify-between items-center mb-16 relative z-20">
+          {/* Top Left Logo */}
+          <div className="flex items-center gap-3">
+            <img src="/qtt-logo.svg" alt="QTT Logo" className="w-10 h-10" />
+            <h2 className="text-lg font-mokoto uppercase tracking-wider text-gray-900 dark:text-white">Quant Trader Tools</h2>
           </div>
 
-          <div className="max-w-5xl mx-auto">
-            <Header />
+          {/* Top Right Actions */}
+          <div>
+            {siteConfig.theme.enableToggle && <ThemeToggle />}
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto">
+          <Header />
 
             {/* Error State */}
             {error && (
@@ -126,10 +135,19 @@ export function ReleaseNotesClient() {
   // Single column layout (no sidebar)
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-900 dark:text-slate-50 relative">
-      <div className="max-w-5xl mx-auto px-8 py-12 lg:px-12">
-        {/* Top Right Actions */}
-        <div className="absolute top-6 right-6 lg:top-12 lg:right-12 z-20">
-          {siteConfig.theme.enableToggle && <ThemeToggle />}
+      <div className="max-w-5xl mx-auto px-8 py-12 lg:px-12 relative">
+        {/* Top Navigation Bar */}
+        <div className="flex justify-between items-center mb-16 relative z-20">
+          {/* Top Left Logo */}
+          <div className="flex items-center gap-3">
+            <img src="/qtt-logo.svg" alt="QTT Logo" className="w-10 h-10" />
+            <h2 className="text-lg font-mokoto uppercase tracking-wider text-gray-900 dark:text-white">Quant Trader Tools</h2>
+          </div>
+
+          {/* Top Right Actions */}
+          <div>
+            {siteConfig.theme.enableToggle && <ThemeToggle />}
+          </div>
         </div>
 
         <Header />
