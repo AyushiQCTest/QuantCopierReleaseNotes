@@ -11,14 +11,16 @@ import { sortReleases } from '@/lib/utils';
 import { siteConfig } from '@/config/site.config';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { ReleaseSidebar } from '@/components/releases/release-sidebar';
 import { ReleaseList } from '@/components/releases/release-list';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Menu } from 'lucide-react';
 
 export function ReleaseNotesClient() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     async function loadReleases() {
@@ -54,7 +56,7 @@ export function ReleaseNotesClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-900 dark:text-slate-50">
         <div className="max-w-6xl mx-auto px-4 py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
@@ -70,13 +72,26 @@ export function ReleaseNotesClient() {
   // Main layout with sidebar
   if (siteConfig.sidebar.enabled) {
     return (
-      <div
-        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50"
-        style={{ display: 'grid', gridTemplateColumns: `1fr ${siteConfig.sidebar.width}` }}
-      >
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-900 dark:text-slate-50 flex flex-col lg:flex-row relative">
+        
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="lg:hidden fixed bottom-6 right-6 z-30 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 hover:scale-105 transition-all duration-200"
+          aria-label="Open versions menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
         {/* Main Content */}
-        <div className="px-8 py-12 overflow-y-auto lg:px-12">
-          <div className="max-w-4xl">
+        <div className="flex-1 px-6 py-10 lg:px-12 lg:py-12 overflow-y-auto relative">
+          
+          {/* Top Right Actions */}
+          <div className="absolute top-6 right-6 lg:top-12 lg:right-12 z-20">
+            {siteConfig.theme.enableToggle && <ThemeToggle />}
+          </div>
+
+          <div className="max-w-5xl mx-auto">
             <Header />
 
             {/* Error State */}
@@ -99,15 +114,24 @@ export function ReleaseNotesClient() {
         </div>
 
         {/* Sidebar - Versions (Right Side) */}
-        <ReleaseSidebar releases={releases} />
+        <ReleaseSidebar 
+          releases={releases} 
+          isOpen={isSidebarOpen} 
+          onClose={() => setIsSidebarOpen(false)} 
+        />
       </div>
     );
   }
 
   // Single column layout (no sidebar)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50">
-      <div className="max-w-4xl mx-auto px-8 py-12 lg:px-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-900 dark:text-slate-50 relative">
+      <div className="max-w-5xl mx-auto px-8 py-12 lg:px-12">
+        {/* Top Right Actions */}
+        <div className="absolute top-6 right-6 lg:top-12 lg:right-12 z-20">
+          {siteConfig.theme.enableToggle && <ThemeToggle />}
+        </div>
+
         <Header />
 
         {/* Error State */}

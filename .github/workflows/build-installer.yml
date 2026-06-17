@@ -151,15 +151,36 @@ jobs:
           $specFile = "${{ env.BACKEND_PATH }}/QuantCopierAPI.spec"
           if (Test-Path $specFile) {
             $content = Get-Content $specFile -Raw
-            if ($content -match 'version\s*=') {
-              $content = $content -replace 'version\s*=\s*[0-9.]+', "version='$version'"
+            if ($content -match "version\s*=\s*'api_version_info") {
+              Write-Host "✓ PyInstaller spec uses api_version_info.txt (version patched there)"
+            } elseif ($content -match 'version\s*=') {
+              $content = $content -replace "version\s*=\s*'[^']*'", "version='api_version_info.txt'"
+              Set-Content $specFile -Value $content -Encoding UTF8 -NoNewline
+              Write-Host "✓ Updated PyInstaller spec to use api_version_info.txt"
             } else {
-              $content = $content -replace "(name='QuantCopierAPI',)", "name='QuantCopierAPI',`n    version='$version',"
+              $content = $content -replace "(name='QuantCopierAPI',)", "name='QuantCopierAPI',`n    version='api_version_info.txt',"
+              Set-Content $specFile -Value $content -Encoding UTF8 -NoNewline
+              Write-Host "✓ Added version='api_version_info.txt' to PyInstaller spec"
             }
-            Set-Content $specFile -Value $content -Encoding UTF8 -NoNewline
-            Write-Host "✓ Updated PyInstaller spec: version=$version"
           }
-          
+
+          # Update api_version_info.txt (PyInstaller Windows PE metadata)
+          $versionInfoFile = "${{ env.BACKEND_PATH }}/api_version_info.txt"
+          if (Test-Path $versionInfoFile) {
+            $parts = $version -split '\.'
+            $major = if ($parts.Length -gt 0) { $parts[0] } else { '1' }
+            $minor = if ($parts.Length -gt 1) { $parts[1] } else { '0' }
+            $patch = if ($parts.Length -gt 2) { $parts[2] } else { '0' }
+            $tuple = "($major, $minor, $patch, 0)"
+            $vi = Get-Content $versionInfoFile -Raw
+            $vi = $vi -replace 'filevers\s*=\s*\([^)]+\)', "filevers=$tuple"
+            $vi = $vi -replace 'prodvers\s*=\s*\([^)]+\)', "prodvers=$tuple"
+            $vi = $vi -replace "(StringStruct\(u'FileVersion'[^)]*\))", "StringStruct(u'FileVersion',      u'$version.0')"
+            $vi = $vi -replace "(StringStruct\(u'ProductVersion'[^)]*\))", "StringStruct(u'ProductVersion',   u'$version')"
+            Set-Content $versionInfoFile -Value $vi -Encoding UTF8 -NoNewline
+            Write-Host "✓ Updated api_version_info.txt: version=$version"
+          }
+
           # Update Inno Setup script
           $issFile = "${{ env.FRONTEND_PATH }}/QCTelegramMT5_SetupExe_Spec.iss"
           if (Test-Path $issFile) {
@@ -172,6 +193,33 @@ jobs:
             }
             Set-Content $issFile -Value $content -Encoding UTF8 -NoNewline
             Write-Host "✓ Updated Inno Setup: version=$version"
+          }
+
+          # Update tauri.conf.json (embeds into QuantCopierTelegramUI.exe PE header)
+          $tauriConf = "${{ env.FRONTEND_PATH }}/src-tauri/tauri.conf.json"
+          if (Test-Path $tauriConf) {
+            $content = Get-Content $tauriConf -Raw
+            $content = $content -replace '"version":\s*"[^"]+"', ('"version": "' + $version + '"')
+            Set-Content $tauriConf -Value $content -Encoding UTF8 -NoNewline
+            Write-Host "✓ Updated tauri.conf.json: version=$version"
+          }
+
+          # Update Cargo.toml (must match tauri.conf.json)
+          $cargoToml = "${{ env.FRONTEND_PATH }}/src-tauri/Cargo.toml"
+          if (Test-Path $cargoToml) {
+            $content = Get-Content $cargoToml -Raw
+            $content = $content -replace '(?m)^(version\s*=\s*)"[^"]+"', "`${1}""$version"""
+            Set-Content $cargoToml -Value $content -Encoding UTF8 -NoNewline
+            Write-Host "✓ Updated Cargo.toml: version=$version"
+          }
+
+          # Update package.json
+          $pkgJson = "${{ env.FRONTEND_PATH }}/package.json"
+          if (Test-Path $pkgJson) {
+            $pkg = Get-Content $pkgJson -Raw | ConvertFrom-Json
+            $pkg.version = $version
+            $pkg | ConvertTo-Json -Depth 10 | Set-Content $pkgJson -Encoding UTF8 -NoNewline
+            Write-Host "✓ Updated package.json: version=$version"
           }
 
       # ============================================================

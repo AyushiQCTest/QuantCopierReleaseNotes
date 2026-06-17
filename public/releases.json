@@ -1,33 +1,16 @@
 {
   "releases": [
     {
-      "version": "1.3.2",
-      "title": "Release v1.3.2",
-      "date": "2026-05-18",
+      "version": "1.3.3",
+      "title": "Release v1.3.3",
+      "date": "2026-06-02",
       "prerelease": false,
       "draft": false,
-      "features": [
-        "Multi-account signal synchronization with real-time updates",
-        "Advanced risk management with dynamic lot sizing",
-        "Telegram webhook improvements for faster notifications",
-        "Support for multiple MT5 instances on single machine"
-      ],
-      "fixes": [
-        "Fixed critical bug in signal processing queue",
-        "Resolved memory leak in background service",
-        "Fixed intermittent connection drops with MT5",
-        "Corrected trade history synchronization issues",
-        "Fixed UI freeze when processing large trade volumes"
-      ],
-      "improvements": [
-        "Optimized database queries for 40% faster data retrieval",
-        "Improved UI responsiveness under high trading activity",
-        "Enhanced error logging and diagnostics",
-        "Reduced API call overhead by implementing caching",
-        "Streamlined configuration setup wizard"
-      ],
-      "url": "https://github.com/AyushiQCTest/QuantCopierUI/releases/tag/v1.3.2",
-      "body": "## Features\r\n\r\n- Multi-account signal synchronization with real-time updates\r\n- Advanced risk management with dynamic lot sizing\r\n- Telegram webhook improvements for faster notifications\r\n- Support for multiple MT5 instances on single machine\r\n\r\n## Bug Fixes\r\n\r\n- Fixed critical bug in signal processing queue\r\n- Resolved memory leak in background service\r\n- Fixed intermittent connection drops with MT5\r\n- Corrected trade history synchronization issues\r\n- Fixed UI freeze when processing large trade volumes\r\n\r\n## Improvements\r\n\r\n- Optimized database queries for 40% faster data retrieval\r\n- Improved UI responsiveness under high trading activity\r\n- Enhanced error logging and diagnostics\r\n- Reduced API call overhead by implementing caching\r\n- Streamlined configuration setup wizard"
+      "features": [],
+      "fixes": [],
+      "improvements": [],
+      "url": "https://github.com/AyushiQCTest/QuantCopierUI/releases/tag/v1.3.3",
+      "body": "## Release v1.3.3\n\nAutomatically generated from installer build pipeline.\n\nView release notes at: https://releases.quanttradertools.com/"
     }
   ]
 }
