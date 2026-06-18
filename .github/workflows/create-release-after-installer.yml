@@ -106,8 +106,24 @@ jobs:
         with:
           github-token: ${{ secrets.GH_PAT }}
           script: |
+            const fs = require('fs');
             const version = "${{ steps.version.outputs.VERSION }}";
             const tag = "${{ steps.version.outputs.TAG }}";
+            
+            let releaseBody = `## Release ${tag}\n\nAutomatically generated from installer build pipeline.\n\nView release notes at: https://releases.quanttradertools.com/`;
+            
+            try {
+              if (fs.existsSync('md_docs/LATEST_RELEASE.md')) {
+                const customNotes = fs.readFileSync('md_docs/LATEST_RELEASE.md', 'utf8');
+                // Check if it's more than just the template or empty
+                if (customNotes && customNotes.trim().length > 0) {
+                  // We can append the automated footer to their custom notes
+                  releaseBody = customNotes + `\n\n---\n*Automatically generated from installer build pipeline.*\n*View release notes at: https://releases.quanttradertools.com/*`;
+                }
+              }
+            } catch (err) {
+              console.log('Error reading LATEST_RELEASE.md, using default body:', err);
+            }
             
             try {
               const release = await github.rest.repos.createRelease({
@@ -115,7 +131,7 @@ jobs:
                 repo: "QuantCopierUI",
                 tag_name: tag,
                 name: `Release ${tag}`,
-                body: `## Release ${tag}\n\nAutomatically generated from installer build pipeline.\n\nView release notes at: https://releases.quanttradertools.com/`,
+                body: releaseBody,
                 draft: false,
                 prerelease: false
               });
