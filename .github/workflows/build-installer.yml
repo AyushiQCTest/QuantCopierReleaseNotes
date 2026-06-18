@@ -453,11 +453,11 @@ jobs:
         run: |
           Write-Host "Uploading installer to Firebase Storage..."
           
-          $bucket = "${{ secrets.FIREBASE_STORAGE_BUCKET_DISCORD }}"
+          $bucket = "${{ secrets.FIREBASE_STORAGE_BUCKET }}"
           $projectId = "${{ secrets.FIREBASE_PROJECT_ID }}"
           
           if (-not $bucket) {
-            Write-Error "ERROR: FIREBASE_STORAGE_BUCKET_DISCORD secret is not set"
+            Write-Error "ERROR: FIREBASE_STORAGE_BUCKET secret is not set"
             exit 1
           }
           
