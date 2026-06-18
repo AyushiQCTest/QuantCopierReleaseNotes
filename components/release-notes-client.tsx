@@ -56,7 +56,7 @@ export function ReleaseNotesClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-900 dark:text-slate-50">
+      <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50">
         <div className="max-w-6xl mx-auto px-4 py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
@@ -72,7 +72,7 @@ export function ReleaseNotesClient() {
   // Main layout with sidebar
   if (siteConfig.sidebar.enabled) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-900 dark:text-slate-50 flex flex-col lg:flex-row relative">
+      <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 flex flex-col lg:flex-row relative">
         
         {/* Mobile Menu Button */}
         <button
@@ -84,24 +84,31 @@ export function ReleaseNotesClient() {
         </button>
 
         {/* Main Content */}
-        <div className="flex-1 px-6 py-10 lg:px-12 lg:py-12 overflow-y-auto relative">
+        <div className="flex-1 flex flex-col h-screen overflow-y-auto relative">
           
-        {/* Top Navigation Bar */}
-        <div className="flex justify-between items-center mb-16 relative z-20">
-          {/* Top Left Logo */}
-          <div className="flex items-center gap-3">
-            <img src="/qtt-logo.svg" alt="QTT Logo" className="w-10 h-10" />
-            <h2 className="text-lg font-mokoto uppercase tracking-wider text-gray-900 dark:text-white">Quant Trader Tools</h2>
+        {/* Header Section (Blue Background) */}
+        <div className="w-full relative z-20 border-b border-blue-100 dark:border-slate-800 bg-[#f4f9ff] dark:bg-slate-900/50">
+          {/* Top Navigation Bar */}
+          <div className="w-full px-6 py-2 md:px-10 flex justify-between items-center">
+            {/* Top Left Logo */}
+            <div className="flex items-center gap-3">
+              <img src="/qtt-logo.svg" alt="QTT Logo" className="w-10 h-10" />
+              <h2 className="text-lg font-mokoto uppercase tracking-wider text-gray-900 dark:text-white">Quant Trader Tools</h2>
+            </div>
+
+            {/* Top Right Actions */}
+            <div>
+              {siteConfig.theme.enableToggle && <ThemeToggle />}
+            </div>
           </div>
 
-          {/* Top Right Actions */}
-          <div>
-            {siteConfig.theme.enableToggle && <ThemeToggle />}
+          {/* Header Content */}
+          <div className="max-w-5xl mx-auto px-8 pb-4 pt-0 lg:px-12">
+            <Header />
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto">
-          <Header />
+        <div className="max-w-5xl mx-auto px-8 py-6 lg:px-12 w-full flex-1">
 
             {/* Error State */}
             {error && (
@@ -134,10 +141,11 @@ export function ReleaseNotesClient() {
 
   // Single column layout (no sidebar)
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-gray-900 dark:text-slate-50 relative">
-      <div className="max-w-5xl mx-auto px-8 py-12 lg:px-12 relative">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 relative flex flex-col">
+      {/* Header Section (Blue Background) */}
+      <div className="w-full relative z-20 border-b border-blue-100 dark:border-slate-800 bg-[#f4f9ff] dark:bg-slate-900/50">
         {/* Top Navigation Bar */}
-        <div className="flex justify-between items-center mb-16 relative z-20">
+        <div className="w-full px-6 py-2 md:px-10 flex justify-between items-center">
           {/* Top Left Logo */}
           <div className="flex items-center gap-3">
             <img src="/qtt-logo.svg" alt="QTT Logo" className="w-10 h-10" />
@@ -150,7 +158,14 @@ export function ReleaseNotesClient() {
           </div>
         </div>
 
-        <Header />
+        {/* Header Content */}
+        <div className="max-w-5xl mx-auto px-8 pb-4 pt-0 lg:px-12">
+          <Header />
+        </div>
+      </div>
+
+      {/* Main Body Content */}
+      <div className="max-w-5xl mx-auto px-8 py-6 lg:px-12 relative flex-1 w-full">
 
         {/* Error State */}
         {error && (
