@@ -68,7 +68,7 @@ export function ReleaseNotesClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50">
+      <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50">
         <div className="max-w-6xl mx-auto px-4 py-24">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
@@ -81,7 +81,7 @@ export function ReleaseNotesClient() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 text-gray-900 dark:text-slate-50"
+      className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50"
       style={{ display: 'grid', gridTemplateColumns: '1fr 280px' }}
     >
       {/* Main Content */}
@@ -121,25 +121,18 @@ export function ReleaseNotesClient() {
 
           {/* Header */}
           <header className="mb-16">
-            <div className="space-y-6">
-              <div className="flex flex-col">
-                <div className="flex flex-col items-start animate-fade-in">
-                  <h1 className="text-7xl md:text-8xl font-black bg-gradient-to-r from-slate-800 to-blue-600 dark:from-white dark:to-blue-400 bg-clip-text text-transparent mb-4 tracking-tight">
-                    Release Notes
-                  </h1>
-                  
-                  <p className="text-5xl md:text-6xl font-black tracking-tight mb-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
-                    <span className="text-[#0f172a] dark:text-white">Quant</span><span className="text-[#0ea5e9]">Copier</span>
-                  </p>
-                  
-                  <div className="flex items-center gap-2 ml-1 animate-fade-in" style={{ animationDelay: '200ms' }}>
-                    <img src="/telegram-light.svg" alt="Telegram" className="w-5 h-5 dark:hidden block" />
-                    <img src="/telegram-dark.svg" alt="Telegram" className="w-5 h-5 hidden dark:block" />
-                    <span className="text-xl font-light tracking-wide text-gray-600 dark:text-gray-400">Telegram</span>
-                  </div>
+            <div className="space-y-6 flex flex-col items-center text-center">
+              <div className="flex flex-col items-center animate-fade-in">
+                <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-slate-800 to-blue-600 dark:from-white dark:to-blue-400 bg-clip-text text-transparent mb-6 tracking-tight">
+                  Release Notes
+                </h1>
+                
+                <div className="flex items-center justify-center animate-fade-in" style={{ animationDelay: '100ms' }}>
+                  <img src="/QCT_Logo_Light.svg" alt="QCT Logo" className="h-16 md:h-20 dark:hidden block w-auto" />
+                  <img src="/QCT_Logo_Dark.svg" alt="QCT Logo" className="h-16 md:h-20 hidden dark:block w-auto" />
                 </div>
               </div>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">Stay updated with the latest features, fixes, and improvements to your trading signal copier</p>
+              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Stay updated with the latest features, fixes, and improvements to your trading signal copier</p>
             </div>
           </header>
 
@@ -173,16 +166,16 @@ export function ReleaseNotesClient() {
 
           {/* Footer */}
           <footer className="mt-20 pt-12 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
-            <p className="font-medium mb-4">Follow us on GitHub for the latest updates</p>
-            <p>
+            <p className="font-medium mb-4">
+              Reach out to us using our{' '}
               <a
-                href="https://github.com/quanttradertools/QuantCopierUI"
+                href="https://quanttradertools.com/#contact"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium inline-flex items-center gap-2"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium inline-flex items-center gap-1"
               >
-                github.com/quanttradertools
-                <ExternalLink className="w-4 h-4" />
+                Contact Form
+                <ExternalLink className="w-3 h-3 ml-0.5" />
               </a>
             </p>
           </footer>
@@ -207,111 +200,6 @@ export function ReleaseNotesClient() {
               Version {release.version}
             </a>
           ))}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="px-8 py-12 overflow-y-auto max-h-screen">
-        <div className="max-w-3xl mx-auto">
-          {/* Top Bar with Back Button and Theme Toggle */}
-          <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-3">
-              <img src="/qtt-logo.svg" alt="QTT Logo" className="w-8 h-8" />
-              <h2 className="text-lg font-mokoto text-gray-900 dark:text-white">Quant Trader Tools</h2>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => window.close()}
-                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm font-medium"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="hidden sm:inline">Back to App</span>
-              </button>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
-                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-              >
-                {theme === 'light' ? (
-                  <Moon className="w-5 h-5 text-gray-700" />
-                ) : (
-                  <Sun className="w-5 h-5 text-yellow-400" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Header */}
-          <header className="mb-16">
-            <div className="space-y-6">
-              <div className="flex flex-col">
-                <div className="flex flex-col items-start animate-fade-in">
-                  <h1 className="text-7xl md:text-8xl font-black bg-gradient-to-r from-slate-800 to-blue-600 dark:from-white dark:to-blue-400 bg-clip-text text-transparent mb-4 tracking-tight">
-                    Release Notes
-                  </h1>
-                  
-                  <p className="text-5xl md:text-6xl font-black tracking-tight mb-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
-                    <span className="text-[#0f172a] dark:text-white">Quant</span><span className="text-[#0ea5e9]">Copier</span>
-                  </p>
-                  
-                  <div className="flex items-center gap-2 ml-1 animate-fade-in" style={{ animationDelay: '200ms' }}>
-                    <img src="/telegram-light.svg" alt="Telegram" className="w-5 h-5 dark:hidden block" />
-                    <img src="/telegram-dark.svg" alt="Telegram" className="w-5 h-5 hidden dark:block" />
-                    <span className="text-xl font-light tracking-wide text-gray-600 dark:text-gray-400">Telegram</span>
-                  </div>
-                </div>
-              </div>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">Stay updated with the latest features, fixes, and improvements to your trading signal copier</p>
-            </div>
-          </header>
-
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-950/30 border border-red-300 dark:border-red-800 rounded-xl p-5 mb-8 text-red-800 dark:text-red-300 shadow-sm">
-              <p className="font-semibold flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
-                Error Loading Releases
-              </p>
-              <p className="text-sm mt-2">{error}</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!error && releases.length === 0 && (
-            <div className="text-center py-16 bg-white/50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-              <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">No releases found yet</p>
-              <p className="text-gray-500 dark:text-gray-500 text-sm">Check back soon for updates!</p>
-            </div>
-          )}
-
-          {/* Timeline */}
-          {releases.length > 0 && (
-            <div className="space-y-8">
-              {releases.map((release, index) => (
-                <ReleaseCard key={release.version} release={release} isFirst={index === 0} />
-              ))}
-            </div>
-          )}
-
-          {/* Footer */}
-          <footer className="mt-20 pt-12 border-t border-gray-300 dark:border-slate-700 text-center text-gray-600 dark:text-gray-400 text-sm">
-            <p className="font-medium mb-4">Follow us on GitHub for the latest updates</p>
-            <p>
-              <a
-                href="https://github.com/quanttradertools/QuantCopierUI"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium inline-flex items-center gap-2"
-              >
-                github.com/quanttradertools
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </p>
-          </footer>
         </div>
       </div>
     </div>
