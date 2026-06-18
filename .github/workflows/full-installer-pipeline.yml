@@ -26,7 +26,7 @@ env:
   FRONTEND_PATH: "frontend"
   BACKEND_REPO: ${{ vars.BACKEND_REPO || 'AyushiQCTest/qcdemo' }}
   BACKEND_REF: ${{ vars.BACKEND_REF || 'main' }}
-  BACKEND_PATH: "backend"
+  BACKEND_PATH: "qcdemo"
   FIREBASE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
 
 jobs:
@@ -51,6 +51,15 @@ jobs:
           path: ${{ env.FRONTEND_PATH }}
           fetch-depth: 1
           token: ${{ secrets.FRONTEND_REPO_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Checkout backend app (qcdemo)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          ref: ${{ env.BACKEND_REF }}
+          path: ${{ env.BACKEND_PATH }}
+          fetch-depth: 1
+          token: ${{ secrets.BACKEND_REPO_TOKEN || secrets.GITHUB_TOKEN }}
 
       # Extract version and apply to PyInstaller & Inno Setup
       - name: Extract and apply version
@@ -315,6 +324,39 @@ jobs:
           Write-Host "Copied API sidecar to $targetDir\$targetName"
 
       # ------------------------------
+      # Build Legacy qcdemo backend
+      # ------------------------------
+      - name: Create venv and install qcdemo deps
+        shell: pwsh
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\Activate.ps1
+          python -m pip install --upgrade pip
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+
+      - name: Build qcdemo executable (PyInstaller)
+        shell: pwsh
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: |
+          .\.venv\Scripts\Activate.ps1
+          if (Test-Path QuantCopierTelegram.spec) {
+            pyinstaller QuantCopierTelegram.spec
+          } else {
+            pyinstaller --onefile QuantCopierTelegram.py
+          }
+
+      - name: Locate qcdemo binary
+        id: qcdemo_sidecar
+        shell: pwsh
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: |
+          $bin = Get-ChildItem -Path dist -Filter *.exe -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $bin) { Write-Error "qcdemo binary not found"; exit 1 }
+          echo "QCDEMO_SIDECAR_PATH=$($bin.FullName)" >> $env:GITHUB_OUTPUT
+          Write-Host "Found qcdemo sidecar: $($bin.FullName)"
+
+      # ------------------------------
       # Build Tauri app
       # ------------------------------
       - name: Install frontend dependencies
@@ -430,10 +472,12 @@ jobs:
             files = @{
               mainInstaller = $installerFile
               apiSidecar = $apiFile
+              qcdemoSidecar = "QuantCopierTelegram.exe"
             }
             downloads = @{
               mainInstaller = "$baseUrl$installerFile"
               apiSidecar = "$baseUrl$apiFile"
+              qcdemoSidecar = "$baseUrl`QuantCopierTelegram.exe"
             }
           }
 
@@ -514,14 +558,21 @@ jobs:
           Write-Host "Uploading API sidecar to GCS: $apiSidecarDest"
           Invoke-Upload -Source "$apiPath" -Destination $apiSidecarDest
 
+          # 4. Upload qcdemo executable (QuantCopierTelegram.exe)
+          $qcdemoDest = "Telegram/$releaseTag/QuantCopierTelegram.exe"
+          Write-Host "Uploading qcdemo to GCS: $qcdemoDest"
+          Invoke-Upload -Source "${{ steps.qcdemo_sidecar.outputs.QCDEMO_SIDECAR_PATH }}" -Destination $qcdemoDest
+
           $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/Telegram%2F$releaseTag%2F$publicInstallerName?alt=media"
           $uiUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/Telegram%2F$releaseTag%2F$uiName?alt=media"
           $apiSidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/Telegram%2F$releaseTag%2F$apiName?alt=media"
+          $qcdemoUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/Telegram%2F$releaseTag%2FQuantCopierTelegram.exe?alt=media"
           $releasesJsonUrl = "https://storage.googleapis.com/${{ env.FIREBASE_BUCKET }}/Telegram/releases.json"
 
           echo "FIREBASE_URL=$url" >> $env:GITHUB_ENV
           echo "UI_FIREBASE_URL=$uiUrl" >> $env:GITHUB_ENV
           echo "API_SIDECAR_FIREBASE_URL=$apiSidecarUrl" >> $env:GITHUB_ENV
+          echo "QCDEMO_FIREBASE_URL=$qcdemoUrl" >> $env:GITHUB_ENV
           echo "RELEASES_JSON_URL=$releasesJsonUrl" >> $env:GITHUB_ENV
           echo "RELEASE_TAG=$releaseTag" >> $env:GITHUB_ENV
           echo "upload_success=true" >> $env:GITHUB_OUTPUT
@@ -574,11 +625,14 @@ jobs:
           - Installer: `QuantCopier.exe`
           - Raw UI App: `QuantCopierTelegramUI.exe`
           - API Sidecar: `QuantCopierAPI.exe`
+          - qcdemo Sidecar: `QuantCopierTelegram.exe`
           - Firebase Installer path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopier.exe
           - Firebase Raw UI path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierTelegramUI.exe
           - API Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierAPI.exe
+          - qcdemo Sidecar Firebase path: gs://${{ env.FIREBASE_BUCKET }}/${{ env.RELEASE_TAG }}/QuantCopierTelegram.exe
           - releases.json: ${{ env.RELEASES_JSON_URL }}
           - Download Installer URL: ${{ env.FIREBASE_URL }}
           - Raw UI Download URL: ${{ env.UI_FIREBASE_URL }}
           - API Sidecar Download URL: ${{ env.API_SIDECAR_FIREBASE_URL }}
+          - qcdemo Download URL: ${{ env.QCDEMO_FIREBASE_URL }}
           "@ >> $env:GITHUB_STEP_SUMMARY
