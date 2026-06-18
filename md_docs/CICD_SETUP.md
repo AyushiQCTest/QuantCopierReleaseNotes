@@ -262,7 +262,7 @@ src-tauri/target/release/bundle/
 
 **Upload destination:**
 ```
-gs://<bucket>/installers/<tag>/<filename>.exe
+gs://<bucket>/Telegram/installers/<tag>/<filename>.exe
 ```
 
 ---

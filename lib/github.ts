@@ -34,7 +34,9 @@ export async function fetchGitHubReleases(): Promise<Release[]> {
     }
 
     const releases = await response.json();
-    return releases.map((release: any) => parseRelease(release));
+    return releases
+      .filter((release: any) => !release.tag_name.startsWith('discord-'))
+      .map((release: any) => parseRelease(release));
   } catch (error) {
     console.error('Failed to fetch releases:', error);
     return [];
