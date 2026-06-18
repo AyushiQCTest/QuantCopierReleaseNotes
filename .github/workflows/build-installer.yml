@@ -461,7 +461,7 @@ jobs:
             exit 1
           }
           
-          $destPath = "installers/${{ steps.get_tag.outputs.RELEASE_TAG }}/$env:INSTALLER_NAME"
+          $destPath = "Discord/installers/${{ steps.get_tag.outputs.RELEASE_TAG }}/$env:INSTALLER_NAME"
           
           Write-Host "Source: $env:INSTALLER_PATH"
           Write-Host "Destination: gs://$bucket/$destPath"

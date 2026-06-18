@@ -420,7 +420,7 @@ jobs:
           # Use canonical artifact filenames
           $installerFile = "QuantCopierTelegramUI.exe"
           $apiFile = "QuantCopierAPI.exe"
-          $baseUrl = "https://storage.googleapis.com/$bucket/$releaseTag/"
+          $baseUrl = "https://storage.googleapis.com/$bucket/Discord/$releaseTag/"
 
           $releaseData = @{
             latest = $releaseTag
@@ -500,24 +500,24 @@ jobs:
           $apiPath = "$env:NORMALIZED_API_SIDECAR_PATH"
 
           # 1. Upload public installer (QuantCopier.exe)
-          $dest = "$releaseTag/$publicInstallerName"
+          $dest = "Discord/$releaseTag/$publicInstallerName"
           Write-Host "Uploading public installer to GCS: $dest"
           Invoke-Upload -Source "$publicInstallerPath" -Destination $dest
 
           # 2. Upload raw UI executable (QuantCopierTelegramUI.exe)
-          $uiDest = "$releaseTag/$uiName"
+          $uiDest = "Discord/$releaseTag/$uiName"
           Write-Host "Uploading raw UI executable to GCS: $uiDest"
           Invoke-Upload -Source "$uiPath" -Destination $uiDest
 
           # 3. Upload API sidecar executable (QuantCopierAPI.exe)
-          $apiSidecarDest = "$releaseTag/$apiName"
+          $apiSidecarDest = "Discord/$releaseTag/$apiName"
           Write-Host "Uploading API sidecar to GCS: $apiSidecarDest"
           Invoke-Upload -Source "$apiPath" -Destination $apiSidecarDest
 
-          $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$publicInstallerName?alt=media"
-          $uiUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$uiName?alt=media"
-          $apiSidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/$releaseTag%2F$apiName?alt=media"
-          $releasesJsonUrl = "https://storage.googleapis.com/${{ env.FIREBASE_BUCKET }}/releases.json"
+          $url = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/Discord%2F$releaseTag%2F$publicInstallerName?alt=media"
+          $uiUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/Discord%2F$releaseTag%2F$uiName?alt=media"
+          $apiSidecarUrl = "https://firebasestorage.googleapis.com/v0/b/${{ env.FIREBASE_BUCKET }}/o/Discord%2F$releaseTag%2F$apiName?alt=media"
+          $releasesJsonUrl = "https://storage.googleapis.com/${{ env.FIREBASE_BUCKET }}/Discord/releases.json"
 
           echo "FIREBASE_URL=$url" >> $env:GITHUB_ENV
           echo "UI_FIREBASE_URL=$uiUrl" >> $env:GITHUB_ENV
@@ -533,7 +533,7 @@ jobs:
             Write-Error "releases.json was not generated"
             exit 1
           }
-          python scripts/upload_firebase.py --bucket "${{ env.FIREBASE_BUCKET }}" --file "$env:RELEASES_JSON_PATH" --dest "releases.json" --cache-control "no-cache, max-age=0" --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
+          python scripts/upload_firebase.py --bucket "${{ env.FIREBASE_BUCKET }}" --file "$env:RELEASES_JSON_PATH" --dest "Discord/releases.json" --cache-control "no-cache, max-age=0" --credentials "$env:GOOGLE_APPLICATION_CREDENTIALS"
           if ($LASTEXITCODE -ne 0) {
             Write-Error "Failed to upload releases.json"
             exit 1
