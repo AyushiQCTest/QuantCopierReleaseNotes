@@ -74,14 +74,6 @@ export function ReleaseNotesClient() {
     return (
       <div className="min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 flex flex-col lg:flex-row relative">
         
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="lg:hidden fixed bottom-6 right-6 z-30 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 hover:scale-105 transition-all duration-200"
-          aria-label="Open versions menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col h-screen overflow-y-auto relative">
@@ -97,8 +89,31 @@ export function ReleaseNotesClient() {
             </div>
 
             {/* Top Right Actions */}
-            <div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <a 
+                href="https://qc-telegram-releasenotes.vercel.app/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hidden sm:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-all border border-blue-200 dark:border-blue-500/20"
+              >
+                Go to QCTelegram Release Notes
+              </a>
+              <a 
+                href="https://qc-telegram-releasenotes.vercel.app/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="sm:hidden text-xs font-medium px-2 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-all border border-blue-200 dark:border-blue-500/20"
+              >
+                QCTelegram
+              </a>
               {siteConfig.theme.enableToggle && <ThemeToggle />}
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-200 shadow-sm"
+                aria-label="Open versions menu"
+              >
+                <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              </button>
             </div>
           </div>
 
@@ -153,7 +168,23 @@ export function ReleaseNotesClient() {
           </div>
 
           {/* Top Right Actions */}
-          <div>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <a 
+              href="https://qc-telegram-releasenotes.vercel.app/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-all border border-blue-200 dark:border-blue-500/20"
+            >
+              Go to QCTelegram Release Notes
+            </a>
+            <a 
+              href="https://qc-telegram-releasenotes.vercel.app/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="sm:hidden text-xs font-medium px-2 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-all border border-blue-200 dark:border-blue-500/20"
+            >
+              QCTelegram
+            </a>
             {siteConfig.theme.enableToggle && <ThemeToggle />}
           </div>
         </div>

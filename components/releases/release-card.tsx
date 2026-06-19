@@ -97,18 +97,7 @@ export function ReleaseCard({ release, isFirst }: ReleaseCardProps) {
               })}
             </div>
 
-            {/* Link to Full Release */}
-            <div className="mt-5 pt-5 border-t border-gray-200 dark:border-slate-700">
-              <Link
-                href={release.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-semibold transition-all duration-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
-              >
-                View on GitHub
-                <ExternalLink className="w-4 h-4" />
-              </Link>
-            </div>
+
           </div>
         </div>
       </div>
