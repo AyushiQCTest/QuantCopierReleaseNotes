@@ -28,18 +28,18 @@ export function ReleaseSidebar({ releases, isOpen, onClose }: ReleaseSidebarProp
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar Container */}
       <div className={`
-        fixed lg:sticky top-0 right-0 h-screen w-64 lg:w-[256px]
+        fixed top-0 right-0 h-screen w-64 lg:w-[256px]
         px-6 py-8 lg:py-12 overflow-y-auto bg-white dark:bg-slate-950 
         border-l border-slate-200 dark:border-slate-800 z-50
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
         <div className="flex justify-between items-center mb-6 lg:mb-4">
           <h2 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest px-3">
@@ -47,7 +47,7 @@ export function ReleaseSidebar({ releases, isOpen, onClose }: ReleaseSidebarProp
           </h2>
           <button 
             onClick={onClose}
-            className="lg:hidden p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <X className="w-5 h-5" />
           </button>
