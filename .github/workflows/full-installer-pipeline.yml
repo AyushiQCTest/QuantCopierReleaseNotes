@@ -359,11 +359,30 @@ jobs:
       - name: Copy qcdemo sidecar into Tauri binaries folder
         shell: pwsh
         run: |
+          $sourcePath = "${{ steps.qcdemo_sidecar.outputs.QCDEMO_SIDECAR_PATH }}"
+          Write-Host "Source path is: $sourcePath"
+          
+          if (-not (Test-Path $sourcePath)) {
+            Write-Error "CRITICAL: The source executable $sourcePath does not exist!"
+            exit 1
+          }
+
           $targetDir = Join-Path "${{ env.FRONTEND_PATH }}" "src-tauri\binaries"
           if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir | Out-Null }
           $targetName = "QuantCopierTelegram-x86_64-pc-windows-msvc.exe"
-          Copy-Item "${{ steps.qcdemo_sidecar.outputs.QCDEMO_SIDECAR_PATH }}" (Join-Path $targetDir $targetName) -Force
-          Write-Host "Copied qcdemo sidecar to $targetDir\$targetName"
+          $destPath = Join-Path $targetDir $targetName
+          
+          Write-Host "Copying to: $destPath"
+          Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction Stop
+          
+          if (-not (Test-Path $destPath)) {
+            Write-Error "CRITICAL: Failed to verify that $destPath was created!"
+            exit 1
+          }
+          
+          Write-Host "Successfully verified sidecar at $destPath"
+          Write-Host "Contents of binaries directory:"
+          Get-ChildItem -Path $targetDir | Select-Object Name, Length
 
       # ------------------------------
       # Build Tauri app
