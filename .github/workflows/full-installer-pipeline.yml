@@ -356,6 +356,15 @@ jobs:
           echo "QCDEMO_SIDECAR_PATH=$($bin.FullName)" >> $env:GITHUB_OUTPUT
           Write-Host "Found qcdemo sidecar: $($bin.FullName)"
 
+      - name: Copy qcdemo sidecar into Tauri binaries folder
+        shell: pwsh
+        run: |
+          $targetDir = Join-Path "${{ env.FRONTEND_PATH }}" "src-tauri\binaries"
+          if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir | Out-Null }
+          $targetName = "QuantCopierTelegram-x86_64-pc-windows-msvc.exe"
+          Copy-Item "${{ steps.qcdemo_sidecar.outputs.QCDEMO_SIDECAR_PATH }}" (Join-Path $targetDir $targetName) -Force
+          Write-Host "Copied qcdemo sidecar to $targetDir\$targetName"
+
       # ------------------------------
       # Build Tauri app
       # ------------------------------
