@@ -1,6 +1,6 @@
 # QuantCopier Release Notes Deployment Guide
 
-> **Current Version: 1.3.4**
+> **Current Version: 1.3.5**
 
 ## How to Release a New Version
 
@@ -12,7 +12,7 @@
 
 ### VERSION TO BUILD:
 ```
-1.3.4
+1.3.5
 ```
 **Edit the version above ↑ and commit to trigger release automation**
 
