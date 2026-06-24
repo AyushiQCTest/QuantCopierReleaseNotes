@@ -451,8 +451,8 @@ jobs:
           $tempIss = Join-Path $env:RUNNER_TEMP "build.iss"
           $content = Get-Content $iss -Raw
           $appDir = Resolve-Path "."
-          $content = $content -replace "\{APP_DIR\}", $appDir
-          $content = $content -replace "\{OUTPUT_DIR\}", $env:RUNNER_TEMP
+          $content = $content -replace '#define ParentPath "\."', "#define ParentPath `"$appDir`""
+          $content = $content -replace 'OutputDir=build', "OutputDir=$env:RUNNER_TEMP"
           Set-Content -Path $tempIss -Value $content -Encoding UTF8
           echo "INNO_ISS=$tempIss" >> $env:GITHUB_OUTPUT
           echo "INNO_ISS_NAME=$($iss.Name)" >> $env:GITHUB_OUTPUT
